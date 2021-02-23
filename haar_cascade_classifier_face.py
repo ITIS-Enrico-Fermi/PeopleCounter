@@ -7,7 +7,7 @@ import os
 def draw_circle(frame, coord):
     (x, y, w, h) = coord
     center = (x + w // 2, y + h // 2)
-    return cv.ellipse(frame, center, (w // 2, h // 2), 0, 0, 180, (0, 255, 0), 4)  # 360, color
+    return cv.ellipse(frame, center, (w // 2, h // 2), 0, 0, 360, (0, 255, 0), 4)
 
 
 def detect_and_display(frame, face_cascade: cv.CascadeClassifier) -> None:
@@ -16,7 +16,6 @@ def detect_and_display(frame, face_cascade: cv.CascadeClassifier) -> None:
     faces = face_cascade.detectMultiScale(frame_gray)
     for (x, y, w, h) in faces:
         frame = draw_circle(frame, (x, y, w, h))
-        # ROI
     cv.imshow('Face detection with HCC', frame)  # HCCD - Haar Cascade Classifier
 
 
