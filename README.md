@@ -22,4 +22,8 @@ From Python Venv:
 ```
 python -m pip freeze > requirements.txt
 ```
-
+### How to run face detector?
+```
+python haar_cascade_classifier.py
+```
+Press _ESC_ to exit
