@@ -45,7 +45,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--face_cascade', help='Path to face cascade.',
                         default=os.path.join(os.path.split(os.path.abspath(cv.__file__))[0],
-                                             'data/haarcascade_frontalface_alt.xml'))
+                                             'data', 'haarcascade_frontalface_alt.xml'))
     parser.add_argument('--camera', help='Camera number.', type=int, default=0)
     args = parser.parse_args()
     fc = args.face_cascade
