@@ -2,11 +2,15 @@ import cv2 as cv
 import argparse
 import logging
 import os
+from typing import Tuple, List
 
 class Point:
     def __init__(self, x: int = 0, y: int = 0) -> None:
         self.x: int = x
         self.y: int = y
+
+    def to_tuple(self) -> Tuple[int, int]:
+        return (self.x, self.y)
 
 class Region:
     def __init__(self, x: int = 0, y: int = 0, w: int = 0, h: int = 0) -> None:
@@ -26,18 +30,18 @@ class Region:
         return Point(x + w // 2, y + h // 2)
 
 class Classifier:
-    def __init__(self, video_source: int, model_name: str) -> None:
+    def __init__(self, video_source: str, model_name: str) -> None:
         """
         model_name: relative path to the xml model
         """
-        self.model_cascade = cv.CascadeClassifier()
+        self.model_cascade: cv.CascadeClassifier = cv.CascadeClassifier()
         self.model_cascade.load(cv.samples.findFile(model_name))
-        self.video_source = video_source
+        self.video_source: int = video_source
 
     @static
     def draw_ellipse(frame, region: Region):
-        return cv.ellipse(frame, region.get_center(), (w // 2, h // 2), 0, 0, 360, (0, 255, 0), 4)
-
+        return cv.ellipse(frame, region.get_center().to_tuple(), (region.w // 2, region.h // 2), 0, 0, 360, (0, 255, 0), 4)
+    
     def detect(self, frame) -> List[Region]:
         frame_gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
         frame_gray = cv.equalizeHist(frame_gray)
@@ -47,42 +51,38 @@ class Classifier:
             l.append(Region(x, y, w, h))
         return l
     
-    def display(self, frame, regions: List[Region]) -> None:
+    @static
+    def display(frame, regions: List[Region]) -> None:
         for region in regions:
             frame = draw_ellipse(frame, region)
         cv.imshow('Face detection with HCC', frame)  # HCC - Haar Cascade Classifier
 
     def detect_and_display(self, frame) -> None:
-        pass
+        regions: List[Region] = self.detect(frame)
+        display(frame, regions)
+
+    def start(self):
+        cap = cv.VideoCapture(str.isnumeric(self.video_source) ? int(self.video_source) : self.video_source)
+        if not cap.isOpened():
+            logging.error("Camera video stream can't be opened")
+            exit(1)
+        while True:
+            ret, frame = cap.read()
+            if frame is None:
+                continue
+            self.detect_and_display(frame)
+            if cv.waitKey(10) == 27:  # Key ==> 'ESC'
+                break
 
 
-def main(video_camera: int, cascade_classifier_name: str) -> None:
-    classifier = Classifier(video_source, cascade_classifier_name)
-    cap = cv.VideoCapture(video_source)
-    if not cap.isOpened():
-        logging.error("Camera video stream can't be opened")
-        exit(1)
-    while True:
-        ret, frame = cap.read()
-        if frame is None:
-            print('No caputered frame')
-            continue
-
-        detect_and_display(frame, face_cascade)
-
-        if cv.waitKey(10) == 27:
-            break
-
+def main(video_source: str, model: str) -> None:
+    classifier = Classifier(video_source, model)
+    classifer.start()
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s: %(message)s",
-                        datefmt="%H:%M:%S")
+    logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s: %(message)s", datefmt="%H:%M:%S")
     parser = argparse.ArgumentParser()
-    parser.add_argument('--face_cascade', help='Path to face cascade.',
-                        default=os.path.join(os.path.split(os.path.abspath(cv.__file__))[0],
-                                             'data', 'haarcascade_frontalface_alt.xml'))
-    parser.add_argument('--camera', help='Camera number.', type=int, default=0)
+    parser.add_argument('--model', help='Path to cascade classifier model.', default=os.path.join(os.path.split(os.path.abspath(cv.__file__))[0], 'data', 'haarcascade_frontalface_alt.xml'))
+    parser.add_argument('--source', help='Camera number or video filename.', type=str, default='0')
     args = parser.parse_args()
-    fc = args.face_cascade
-    c = args.camera
-    main(c, fc)
+    main(args.source, args.model)
