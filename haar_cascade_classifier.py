@@ -27,7 +27,7 @@ class Region:
         return (self.w * self.h)
 
     def get_center(self) -> Point:
-        return Point(x + w // 2, y + h // 2)
+        return Point(self.x + self.w // 2, self.y + self.h // 2)
 
 class Classifier:
     def __init__(self, video_source: str, model_name: str) -> None:
@@ -38,8 +38,7 @@ class Classifier:
         self.model_cascade.load(cv.samples.findFile(model_name))
         self.video_source: int = video_source
 
-    @static
-    def draw_ellipse(frame, region: Region):
+    def draw_ellipse(self, frame, region: Region):
         return cv.ellipse(frame, region.get_center().to_tuple(), (region.w // 2, region.h // 2), 0, 0, 360, (0, 255, 0), 4)
     
     def detect(self, frame) -> List[Region]:
@@ -51,18 +50,17 @@ class Classifier:
             l.append(Region(x, y, w, h))
         return l
     
-    @static
-    def display(frame, regions: List[Region]) -> None:
+    def display(self, frame, regions: List[Region]) -> None:
         for region in regions:
-            frame = draw_ellipse(frame, region)
-        cv.imshow('Face detection with HCC', frame)  # HCC - Haar Cascade Classifier
+            frame = self.draw_ellipse(frame, region)
+        cv.imshow('Face detection with HCC', cv.resize(frame, (800, 600)))  # HCC - Haar Cascade Classifier
 
     def detect_and_display(self, frame) -> None:
         regions: List[Region] = self.detect(frame)
-        display(frame, regions)
+        self.display(frame, regions)
 
     def start(self):
-        cap = cv.VideoCapture(str.isnumeric(self.video_source) ? int(self.video_source) : self.video_source)
+        cap = cv.VideoCapture(int(self.video_source) if str.isnumeric(self.video_source) else self.video_source)
         if not cap.isOpened():
             logging.error("Camera video stream can't be opened")
             exit(1)
@@ -77,7 +75,7 @@ class Classifier:
 
 def main(video_source: str, model: str) -> None:
     classifier = Classifier(video_source, model)
-    classifer.start()
+    classifier.start()
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s: %(message)s", datefmt="%H:%M:%S")
