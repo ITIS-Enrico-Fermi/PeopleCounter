@@ -2,6 +2,7 @@ import cv2 as cv
 import argparse
 import logging
 import os
+import numpy
 from typing import Tuple, List
 
 class Point:
@@ -38,24 +39,24 @@ class Classifier:
         self.model_cascade.load(cv.samples.findFile(model_name))
         self.video_source: int = video_source
 
-    def draw_ellipse(self, frame, region: Region):
+    def draw_ellipse(self, frame: numpy.ndarray, region: Region):
         return cv.ellipse(frame, region.get_center().to_tuple(), (region.w // 2, region.h // 2), 0, 0, 360, (0, 255, 0), 4)
     
-    def detect(self, frame) -> List[Region]:
-        frame_gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
-        frame_gray = cv.equalizeHist(frame_gray)
+    def detect(self, frame: numpy.ndarray) -> List[Region]:
+        frame_gray: numpy.ndarray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
+        frame_gray: numpy.ndarray = cv.equalizeHist(frame_gray)
         obj_list = self.model_cascade.detectMultiScale(frame_gray)
         l: List[Region] = list()
         for (x, y, w, h) in obj_list:
             l.append(Region(x, y, w, h))
         return l
     
-    def display(self, frame, regions: List[Region]) -> None:
+    def display(self, frame: numpy.ndarray, regions: List[Region]) -> None:
         for region in regions:
-            frame = self.draw_ellipse(frame, region)
-        cv.imshow('Face detection with HCC', cv.resize(frame, (800, 600)))  # HCC - Haar Cascade Classifier
+            frame: numpy.ndarray = self.draw_ellipse(frame, region)
+        cv.imshow('Face detection with HCC', scale(frame, 0.5))  # HCC - Haar Cascade Classifier
 
-    def detect_and_display(self, frame) -> None:
+    def detect_and_display(self, frame: numpy.ndarray) -> None:
         regions: List[Region] = self.detect(frame)
         self.display(frame, regions)
 
@@ -72,6 +73,10 @@ class Classifier:
             if cv.waitKey(10) == 27:  # Key ==> 'ESC'
                 break
 
+def scale(frame: numpy.ndarray, scale_factor: float):  # scale_factor between 0 and 1 if you want to scale down the image
+    scaled_h: int = int(frame.shape[0] * scale_factor)
+    scaled_w: int = int(frame.shape[1] * scale_factor)
+    return cv.resize(frame, (scaled_w, scaled_h))
 
 def main(video_source: str, model: str) -> None:
     classifier = Classifier(video_source, model)
