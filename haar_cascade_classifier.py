@@ -3,7 +3,10 @@ import argparse
 import logging
 import os
 import numpy
+import time
 from typing import Tuple, List
+
+VGA_SIZE: Tuple[int, int] = (640, 480)
 
 class Point:
     def __init__(self, x: int = 0, y: int = 0) -> None:
@@ -38,29 +41,37 @@ class Classifier:
         self.model_cascade: cv.CascadeClassifier = cv.CascadeClassifier()
         self.model_cascade.load(cv.samples.findFile(model_name))
         self.video_source: int = video_source
+    
+    def get_time(self) -> int:
+        return time.time()
 
-    def draw_ellipse(self, frame: numpy.ndarray, region: Region):
+    def draw_ellipse(self, frame: numpy.ndarray, region: Region) -> numpy.ndarray:
         return cv.ellipse(frame, region.get_center().to_tuple(), (region.w // 2, region.h // 2), 0, 0, 360, (0, 255, 0), 4)
     
-    def detect(self, frame: numpy.ndarray) -> List[Region]:
+    def detect(self, frame: numpy.ndarray, processed_frame_preview: bool = False) -> List[Region]:
+        start: int = self.get_time()
         frame_gray: numpy.ndarray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
         frame_gray: numpy.ndarray = cv.equalizeHist(frame_gray)
-        obj_list = self.model_cascade.detectMultiScale(frame_gray)
+        downscaled_frame_gray: numpy.ndarray = cv.resize(frame_gray, dsize = VGA_SIZE, interpolation = cv.INTER_AREA)
+        obj_list = self.model_cascade.detectMultiScale(downscaled_frame_gray)
+        logging.info(f"time for 1 frame classification {self.get_time() - start}")
         l: List[Region] = list()
         for (x, y, w, h) in obj_list:
             l.append(Region(x, y, w, h))
+        if processed_frame_preview:
+            self.display(downscaled_frame_gray, l, 'Processed frame preview')
         return l
-    
-    def display(self, frame: numpy.ndarray, regions: List[Region]) -> None:
+
+    def display(self, frame: numpy.ndarray, regions: List[Region], window_title: str = 'OpenCV show', scale_factor: float = 1.0) -> None:
         for region in regions:
             frame: numpy.ndarray = self.draw_ellipse(frame, region)
-        cv.imshow('Face detection with HCC', scale(frame, 0.5))  # HCC - Haar Cascade Classifier
+        cv.imshow(window_title, scale(frame, scale_factor))  # HCC - Haar Cascade Classifier
+    
+    def detect_and_display(self, frame: numpy.ndarray, processed_frame_preview: bool) -> None:
+        regions: List[Region] = self.detect(frame, processed_frame_preview)
+        self.display(frame, regions, 'Face detection with HCC', 0.5)
 
-    def detect_and_display(self, frame: numpy.ndarray) -> None:
-        regions: List[Region] = self.detect(frame)
-        self.display(frame, regions)
-
-    def start(self):
+    def start(self, processed_frame_preview: bool) -> None:  # Blocking method
         cap = cv.VideoCapture(int(self.video_source) if str.isnumeric(self.video_source) else self.video_source)
         if not cap.isOpened():
             logging.error("Camera video stream can't be opened")
@@ -69,23 +80,24 @@ class Classifier:
             ret, frame = cap.read()
             if frame is None:
                 continue
-            self.detect_and_display(frame)
+            self.detect_and_display(frame, processed_frame_preview)
             if cv.waitKey(10) == 27:  # Key ==> 'ESC'
                 break
 
-def scale(frame: numpy.ndarray, scale_factor: float):  # scale_factor between 0 and 1 if you want to scale down the image
+def scale(frame: numpy.ndarray, scale_factor: float) -> numpy.ndarray:  # scale_factor between 0 and 1 if you want to scale down the image
     scaled_h: int = int(frame.shape[0] * scale_factor)
     scaled_w: int = int(frame.shape[1] * scale_factor)
     return cv.resize(frame, (scaled_w, scaled_h))
 
-def main(video_source: str, model: str) -> None:
+def main(video_source: str, model: str, processed_frame_preview: bool) -> None:
     classifier = Classifier(video_source, model)
-    classifier.start()
+    classifier.start(processed_frame_preview)
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s: %(message)s", datefmt="%H:%M:%S")
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', help='Path to cascade classifier model.', default=os.path.join(os.path.split(os.path.abspath(cv.__file__))[0], 'data', 'haarcascade_frontalface_alt.xml'))
     parser.add_argument('--source', help='Camera number or video filename.', type=str, default='0')
+    parser.add_argument('--processed-frame-preview', help='Show the preview of processed frame', default=False, action='store_true')
     args = parser.parse_args()
-    main(args.source, args.model)
+    main(args.source, args.model, args.processed_frame_preview)
