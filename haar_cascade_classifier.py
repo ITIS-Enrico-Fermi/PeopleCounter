@@ -91,14 +91,24 @@ class Classifier:
         self.model_cascade: cv.CascadeClassifier = cv.CascadeClassifier()
         self.model_cascade.load(cv.samples.findFile(model_name))
         self.video_source: int = video_source
+        self.start_time_int: int = None  # start_time will fill this attribute for the first time
+        self.times: numpy.array = None  # start will fill this attribute
+        self.times_index: int = 0  # Index to keep track of times array filling
     
-    def get_time(self) -> int:
+    def start_time(self) -> None:
         """
-        Get current time
-        :return: current time
+        Get current time and save it into self.start_time. Used to compute the elapsed time afterwards
         """
-        return time.time()
+        self.start_time_int = time.time()
 
+    def end_time(self) -> None:
+        """
+        Compute elapsed time (between start time and current time) and save it into self.times, in order to figure out what's the average time needed to classify one frame
+        """
+        logging.info(f"time for 1 frame classification {time.time() - self.start_time_int}")
+        self.times[self.times_index] = time.time() - self.start_time_int
+        self.times_index += 1
+    
     def draw_ellipse(self, frame: numpy.ndarray, region: Region) -> numpy.ndarray:
         """
         Draw ellipse around a ROI
@@ -115,7 +125,7 @@ class Classifier:
         :param bool processed_frame_preview: am I supposed to show the processed frame?
         :return: a list of regions where the object has been found
         """
-        start: int = self.get_time()
+        self.start_time()
         frame_gray: numpy.ndarray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
         orientation: Orientation = Orientation.get_orientation(frame)
         if orientation is Orientation.VERTICAL:
@@ -125,7 +135,7 @@ class Classifier:
         downscaled_frame_gray: numpy.ndarray = cv.resize(frame_gray, dsize = size, interpolation = cv.INTER_AREA)
         downscaled_frame_gray: numpy.ndarray = cv.equalizeHist(downscaled_frame_gray)
         obj_list = self.model_cascade.detectMultiScale(downscaled_frame_gray)
-        logging.info(f"time for 1 frame classification {self.get_time() - start}")
+        self.end_time()
         original_frame_regions_list: List[Region] = list()
         processed_frame_regions_list: List[Region] = list()
         scale_factor_x: float = frame.shape[1] / size[0]  # both shape[1] and size[0] refer to the x (width)
@@ -164,6 +174,8 @@ class Classifier:
         :param bool processed_frame_preview: am I supposed to show the processed frame?
         """
         cap = cv.VideoCapture(int(self.video_source) if str.isnumeric(self.video_source) else self.video_source)
+        frames_number: int = int(cap.get(cv.CAP_PROP_FRAME_COUNT))
+        self.times = numpy.empty(frames_number, dtype='f', order='C')
         if not cap.isOpened():
             logging.error("Camera video stream can't be opened")
             exit(1)
@@ -174,6 +186,8 @@ class Classifier:
             self.detect_and_display(frame, processed_frame_preview)
             if cv.waitKey(10) == 27:  # Key ==> 'ESC'
                 break
+        # When classification is done, print the average time needed to classify each frame
+        logging.info(f"Average time needed to classify each frame {numpy.average(self.times)}")
 
 def scale(frame: numpy.ndarray, scale_factor: float) -> numpy.ndarray:  # scale_factor between 0 and 1 if you want to scale down the image
     """
