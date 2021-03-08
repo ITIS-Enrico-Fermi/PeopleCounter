@@ -189,15 +189,15 @@ class Classifier:
         # When classification is done, print the average time needed to classify each frame
         logging.info(f"Average time needed to classify each frame {numpy.average(self.times)}")
 
-def scale(frame: numpy.ndarray, scale_factor: float) -> numpy.ndarray:  # scale_factor between 0 and 1 if you want to scale down the image
+def scale(img: numpy.ndarray, scale_factor: float) -> numpy.ndarray:  # scale_factor between 0 and 1 if you want to scale down the image
     """
     Scale an image with a scale factor
     :param numpy.ndarray frame: original frame
     :param fload scale_factor: between 1 and 0 if you want to downscale the image. Scale factor bigger than 1 will increse the size of the image
     """
-    scaled_h: int = int(frame.shape[0] * scale_factor)
-    scaled_w: int = int(frame.shape[1] * scale_factor)
-    return cv.resize(frame, (scaled_w, scaled_h))
+    scaled_h: int = int(img.shape[0] * scale_factor)
+    scaled_w: int = int(img.shape[1] * scale_factor)
+    return cv.resize(img, (scaled_w, scaled_h))
 
 def main(video_source: str, model: str, processed_frame_preview: bool) -> None:
     classifier = Classifier(video_source, model)
