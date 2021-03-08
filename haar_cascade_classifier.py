@@ -95,13 +95,13 @@ class Classifier:
         self.times: numpy.array = None  # start will fill this attribute
         self.times_index: int = 0  # Index to keep track of times array filling
     
-    def start_time(self) -> None:
+    def __start_time(self) -> None:
         """
         Get current time and save it into self.start_time. Used to compute the elapsed time afterwards
         """
         self.start_time_int = time.time()
 
-    def end_time(self) -> None:
+    def __end_time(self) -> None:
         """
         Compute elapsed time (between start time and current time) and save it into self.times, in order to figure out what's the average time needed to classify one frame
         """
@@ -109,7 +109,7 @@ class Classifier:
         self.times[self.times_index] = time.time() - self.start_time_int
         self.times_index += 1
     
-    def draw_ellipse(self, frame: numpy.ndarray, region: Region) -> numpy.ndarray:
+    def __draw_ellipse(self, frame: numpy.ndarray, region: Region) -> numpy.ndarray:
         """
         Draw ellipse around a ROI
         :param numpy.ndarray frame: original frame
@@ -125,7 +125,7 @@ class Classifier:
         :param bool processed_frame_preview: am I supposed to show the processed frame?
         :return: a list of regions where the object has been found
         """
-        self.start_time()
+        self.__start_time()
         frame_gray: numpy.ndarray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
         orientation: Orientation = Orientation.get_orientation(frame)
         if orientation is Orientation.VERTICAL:
@@ -135,7 +135,7 @@ class Classifier:
         downscaled_frame_gray: numpy.ndarray = cv.resize(frame_gray, dsize = size, interpolation = cv.INTER_AREA)
         downscaled_frame_gray: numpy.ndarray = cv.equalizeHist(downscaled_frame_gray)
         obj_list = self.model_cascade.detectMultiScale(downscaled_frame_gray)
-        self.end_time()
+        self.__end_time()
         original_frame_regions_list: List[Region] = list()
         processed_frame_regions_list: List[Region] = list()
         scale_factor_x: float = frame.shape[1] / size[0]  # both shape[1] and size[0] refer to the x (width)
@@ -156,7 +156,7 @@ class Classifier:
         :param float scale_factor: the frame will be scaled according to this value for better view
         """
         for region in regions:
-            frame: numpy.ndarray = self.draw_ellipse(frame, region)
+            frame: numpy.ndarray = self.__draw_ellipse(frame, region)
         cv.imshow(window_title, scale(frame, scale_factor))  # HCC - Haar Cascade Classifier
     
     def detect_and_display(self, frame: numpy.ndarray, processed_frame_preview: bool) -> None:
@@ -192,7 +192,7 @@ class Classifier:
 def scale(img: numpy.ndarray, scale_factor: float) -> numpy.ndarray:  # scale_factor between 0 and 1 if you want to scale down the image
     """
     Scale an image with a scale factor
-    :param numpy.ndarray frame: original frame
+    :param numpy.ndarray image: original image
     :param fload scale_factor: between 1 and 0 if you want to downscale the image. Scale factor bigger than 1 will increse the size of the image
     """
     scaled_h: int = int(img.shape[0] * scale_factor)
