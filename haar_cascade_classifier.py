@@ -106,8 +106,9 @@ class Classifier:
         Compute elapsed time (between start time and current time) and save it into self.times, in order to figure out what's the average time needed to classify one frame
         """
         logging.info(f"time for 1 frame classification {time.time() - self.start_time_int}")
-        self.times[self.times_index] = time.time() - self.start_time_int
-        self.times_index += 1
+        if not str.isnumeric(self.video_source):  # If the video source is not a cam
+            self.times[self.times_index] = time.time() - self.start_time_int
+            self.times_index += 1
     
     def __draw_ellipse(self, frame: numpy.ndarray, region: Region) -> numpy.ndarray:
         """
@@ -134,7 +135,7 @@ class Classifier:
             size: Tuple[int, int] = VGA_HORIZONTAL_SIZE
         downscaled_frame_gray: numpy.ndarray = cv.resize(frame_gray, dsize = size, interpolation = cv.INTER_AREA)
         downscaled_frame_gray: numpy.ndarray = cv.equalizeHist(downscaled_frame_gray)
-        obj_list = self.model_cascade.detectMultiScale(downscaled_frame_gray)
+        obj_list = self.model_cascade.detectMultiScale(downscaled_frame_gray, scaleFactor = 1.2)
         self.__end_time()
         original_frame_regions_list: List[Region] = list()
         processed_frame_regions_list: List[Region] = list()
@@ -147,7 +148,7 @@ class Classifier:
             self.display(downscaled_frame_gray, processed_frame_regions_list, 'Processed frame preview')
         return original_frame_regions_list
 
-    def display(self, frame: numpy.ndarray, regions: List[Region], window_title: str = 'OpenCV show', scale_factor: float = 1.0) -> None:
+    def display(self, frame: numpy.ndarray, regions: List[Region], window_title: str = 'OpenCV show image', scale_factor: float = 1.0) -> None:
         """
         Display a frame drawing a series of ellipses around the regions of interest
         :param numpy.ndarray frame: original frame
@@ -175,7 +176,8 @@ class Classifier:
         """
         cap = cv.VideoCapture(int(self.video_source) if str.isnumeric(self.video_source) else self.video_source)
         frames_number: int = int(cap.get(cv.CAP_PROP_FRAME_COUNT))
-        self.times = numpy.empty(frames_number, dtype='f', order='C')
+        if frames_number > 0:  # frames_num < 0 when the video source is a camera
+            self.times = numpy.empty(frames_number, dtype='f', order='C')
         if not cap.isOpened():
             logging.error("Camera video stream can't be opened")
             exit(1)
@@ -187,7 +189,10 @@ class Classifier:
             if cv.waitKey(10) == 27:  # Key ==> 'ESC'
                 break
         # When classification is done, print the average time needed to classify each frame
-        logging.info(f"Average time needed to classify each frame {numpy.average(self.times)}")
+        if frames_number > 0:
+            logging.info(f"Average time needed to classify each frame {numpy.average(self.times)}")
+            logging.info(f"Max time needed to classify each frame {numpy.amax(self.times)}")
+            logging.info(f"Min time needed to classify each frame {numpy.amin(self.times)}")
 
 def scale(img: numpy.ndarray, scale_factor: float) -> numpy.ndarray:  # scale_factor between 0 and 1 if you want to scale down the image
     """
