@@ -24,6 +24,21 @@ python -m pip freeze > requirements.txt
 ```
 ### How to run face detector?
 ```
-python haar_cascade_classifier.py
+python haar_cascade_classifier.py --source dataset/maia.mp4 --processed-frame-preview
 ```
 Press _ESC_ to exit
+
+### Args
+| short arg |            arg            |                action               |
+|:---------:|:-------------------------:|:-----------------------------------:|
+| -h        | --help                    | show help message and exit          |
+|           | --model MODEL             | Path to cascade classifier model    |
+|           | --source SOURCE           | Camera number or video filename     |
+|           | --processed-frame-preview | Show the preview of processed frame |
+
+## Performance
+|               Description              | MIN [s] | MAX [s] | AVG [s] |
+|:--------------------------------------:|:-------:|:-------:|:-------:|
+| Grayscale + hist equalization          |   0.80  |   1.90  |   1.61  |
+| previous + downscale to VGA resolution |   0.22  |   0.22  |   0.11  |
+| scaleFactor = 1.2                      |   0.13  |   0.13  |   0.07  |

@@ -186,7 +186,7 @@ class Classifier:
             if frame is None:
                 break
             self.detect_and_display(frame, processed_frame_preview)
-            if cv.waitKey(10) == 27:  # Key ==> 'ESC'
+            if cv.waitKey(1) == 27:  # Key ==> 'ESC'
                 break
         # When classification is done, print the average time needed to classify each frame
         if frames_number > 0:
@@ -211,8 +211,8 @@ def main(video_source: str, model: str, processed_frame_preview: bool) -> None:
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s: %(message)s", datefmt="%H:%M:%S")
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model', help='Path to cascade classifier model.', default=os.path.join(os.path.split(os.path.abspath(cv.__file__))[0], 'data', 'haarcascade_frontalface_alt.xml'))
-    parser.add_argument('--source', help='Camera number or video filename.', type=str, default='0')
+    parser.add_argument('--model', help='Path to cascade classifier model', default=os.path.join(os.path.split(os.path.abspath(cv.__file__))[0], 'data', 'haarcascade_frontalface_alt.xml'))
+    parser.add_argument('--source', help='Camera number or video filename', type=str, default='0')
     parser.add_argument('--processed-frame-preview', help='Show the preview of processed frame', default=False, action='store_true')
     args = parser.parse_args()
     main(args.source, args.model, args.processed_frame_preview)
