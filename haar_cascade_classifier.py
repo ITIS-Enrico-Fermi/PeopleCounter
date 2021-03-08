@@ -5,8 +5,10 @@ import os
 import numpy
 import time
 from typing import Tuple, List
+from enum import Enum, auto
 
-VGA_SIZE: Tuple[int, int] = (640, 480)
+VGA_HORIZONTAL_SIZE: Tuple[int, int] = (640, 480)
+VGA_VERTICAL_SIZE: Tuple[int, int] = tuple(reversed(VGA_HORIZONTAL_SIZE))
 
 class Point:
     def __init__(self, x: int = 0, y: int = 0) -> None:
@@ -33,6 +35,22 @@ class Region:
     def get_center(self) -> Point:
         return Point(self.x + self.w // 2, self.y + self.h // 2)
 
+class Orientation(Enum):
+    VERTICAL: int = auto()
+    HORIZONTAL: int = auto()
+    SQUARE: int = auto()
+
+    @staticmethod
+    def get_orientation(img: numpy.ndarray):
+        w: int = img.shape[1]
+        h: int = img.shape[0]
+        if w > h:
+            return Orientation.HORIZONTAL
+        elif h > w:
+            return Orientation.VERTICAL
+        else:
+            return Orientation.SQUARE
+
 class Classifier:
     def __init__(self, video_source: str, model_name: str) -> None:
         """
@@ -52,7 +70,12 @@ class Classifier:
         start: int = self.get_time()
         frame_gray: numpy.ndarray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
         frame_gray: numpy.ndarray = cv.equalizeHist(frame_gray)
-        downscaled_frame_gray: numpy.ndarray = cv.resize(frame_gray, dsize = VGA_SIZE, interpolation = cv.INTER_AREA)
+        orientation: Orientation = Orientation.get_orientation(frame)
+        if orientation is Orientation.VERTICAL:
+            size: Tuple[int, int] = VGA_VERTICAL_SIZE
+        elif orientation is Orientation.HORIZONTAL:
+            size: Tuple[int, int] = VGA_HORIZONTAL_SIZE
+        downscaled_frame_gray: numpy.ndarray = cv.resize(frame_gray, dsize = size, interpolation = cv.INTER_AREA)
         obj_list = self.model_cascade.detectMultiScale(downscaled_frame_gray)
         logging.info(f"time for 1 frame classification {self.get_time() - start}")
         l: List[Region] = list()
