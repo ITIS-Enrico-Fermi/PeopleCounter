@@ -37,6 +37,7 @@ Press _ESC_ to exit
 |           | --processed-frame-preview | Show the preview of processed frame |
 
 ## Performance
+Original video's size is Full HD
 |               Description              | MIN [s] | MAX [s] | AVG [s] |
 |:--------------------------------------:|:-------:|:-------:|:-------:|
 | Grayscale + hist equalization          |   0.80  |   1.90  |   1.61  |
