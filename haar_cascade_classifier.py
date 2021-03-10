@@ -211,8 +211,8 @@ def main(video_source: str, model: str, processed_frame_preview: bool) -> None:
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s: %(message)s", datefmt="%H:%M:%S")
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model', help='Path to cascade classifier model', default=os.path.join(os.path.split(os.path.abspath(cv.__file__))[0], 'data', 'haarcascade_frontalface_alt.xml'))
+    parser.add_argument('--model', help='Path to cascade classifier model', type=str, default='haarcascade_frontalface_alt.xml')
     parser.add_argument('--source', help='Camera number or video filename', type=str, default='0')
     parser.add_argument('--processed-frame-preview', help='Show the preview of processed frame', default=False, action='store_true')
     args = parser.parse_args()
-    main(args.source, args.model, args.processed_frame_preview)
+    main(args.source, os.path.join(os.path.split(os.path.abspath(cv.__file__))[0], 'data', args.model), args.processed_frame_preview)
