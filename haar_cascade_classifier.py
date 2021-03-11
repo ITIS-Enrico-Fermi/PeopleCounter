@@ -82,7 +82,7 @@ class Classifier:
     """
     Classifier tools and utilities
     """
-    def __init__(self, video_source: str, model_name: str) -> None:
+    def __init__(self, model_name: str, video_source: str = None, image = None) -> None:
         """
         Constructor of the class Classifier
         :param str model_name: relative path to the xml model
@@ -90,10 +90,12 @@ class Classifier:
         """
         self.model_cascade: cv.CascadeClassifier = cv.CascadeClassifier()
         self.model_cascade.load(cv.samples.findFile(model_name))
-        self.video_source: int = video_source
+        self.video_source: str = video_source  # video_source == None if the classifier will be used on an image
+        self.image: str = image  # image == None if the classifier will be used on the video source
         self.start_time_int: int = None  # start_time will fill this attribute for the first time
         self.times: numpy.array = None  # start will fill this attribute
         self.times_index: int = 0  # Index to keep track of times array filling
+        self.main_window_created: bool = False
     
     def __start_time(self) -> None:
         """
@@ -158,8 +160,11 @@ class Classifier:
         """
         for region in regions:
             frame: numpy.ndarray = self.__draw_ellipse(frame, region)
-        cv.imshow(window_title, scale(frame, scale_factor))  # HCC - Haar Cascade Classifier
-    
+        cv.imshow(window_title, scale(frame, scale_factor))
+        if not self.main_window_created:
+            cv.moveWindow(window_title, 100, 100)
+            self.main_window_created = True
+
     def detect_and_display(self, frame: numpy.ndarray, processed_frame_preview: bool) -> None:
         """
         Detect objects inside the frame, draw a ellipse around them and show the new frame
@@ -167,13 +172,19 @@ class Classifier:
         :param bool processed_frame_preview: am I supposed to show the processed frame?
         """
         regions: List[Region] = self.detect(frame, processed_frame_preview)
-        self.display(frame, regions, 'Face detection with HCC', 0.5)
+        self.display(frame, regions, 'Face detection with HCC', 0.5)  # HCC - Haar Cascade Classifier
 
     def start(self, processed_frame_preview: bool) -> None:  # Blocking method
         """
         Start video capture and frames classification. Be aware that it's a blocking method (it enters a loop)
         :param bool processed_frame_preview: am I supposed to show the processed frame?
         """
+        if self.image:
+            img: numpy.ndarray = cv.imread(self.image)
+            self.detect_and_display(img, processed_frame_preview)
+            if cv.waitKey(0) == 27:  # Key ==> 'ESC'
+                return
+
         cap = cv.VideoCapture(int(self.video_source) if str.isnumeric(self.video_source) else self.video_source)
         frames_number: int = int(cap.get(cv.CAP_PROP_FRAME_COUNT))
         if frames_number > 0:  # frames_num < 0 when the video source is a camera
@@ -204,15 +215,16 @@ def scale(img: numpy.ndarray, scale_factor: float) -> numpy.ndarray:  # scale_fa
     scaled_w: int = int(img.shape[1] * scale_factor)
     return cv.resize(img, (scaled_w, scaled_h))
 
-def main(video_source: str, model: str, processed_frame_preview: bool) -> None:
-    classifier = Classifier(video_source, model)
+def main(video_source: str, image: str, model: str, processed_frame_preview: bool) -> None:
+    classifier = Classifier(model, video_source = video_source, image = image)
     classifier.start(processed_frame_preview)
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s: %(message)s", datefmt="%H:%M:%S")
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model', help='Path to cascade classifier model', type=str, default='haarcascade_frontalface_alt.xml')
+    parser.add_argument('--model', help='Cascade classifier model name', type=str, default='haarcascade_frontalface_alt.xml')
     parser.add_argument('--source', help='Camera number or video filename', type=str, default='0')
+    parser.add_argument('--image', help='Image filename', type=str)
     parser.add_argument('--processed-frame-preview', help='Show the preview of processed frame', default=False, action='store_true')
     args = parser.parse_args()
-    main(args.source, os.path.join(os.path.split(os.path.abspath(cv.__file__))[0], 'data', args.model), args.processed_frame_preview)
+    main(args.source, args.image, os.path.join(os.path.split(os.path.abspath(cv.__file__))[0], 'data', args.model), args.processed_frame_preview)

@@ -31,9 +31,10 @@ Press _ESC_ to exit
 ### Args
 | short arg |            arg            |                action               |
 |:---------:|:-------------------------:|:-----------------------------------:|
-| -h        | --help                    | show help message and exit          |
-|           | --model MODEL             | Path to cascade classifier model    |
+| -h        | --help                    | Show help message and exit          |
+|           | --model MODEL             | Cascade classifier model name       |
 |           | --source SOURCE           | Camera number or video filename     |
+|           | --image IMAGE             | Image filename                      |
 |           | --processed-frame-preview | Show the preview of processed frame |
 
 ## Performance
