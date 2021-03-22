@@ -6,6 +6,7 @@ import numpy
 import time
 from typing import Tuple, List
 from enum import Enum, auto
+from multiprocessing import Process
 
 VGA_HORIZONTAL_SIZE: Tuple[int, int] = (640, 480)
 VGA_VERTICAL_SIZE: Tuple[int, int] = tuple(reversed(VGA_HORIZONTAL_SIZE))
@@ -215,16 +216,23 @@ def scale(img: numpy.ndarray, scale_factor: float) -> numpy.ndarray:  # scale_fa
     scaled_w: int = int(img.shape[1] * scale_factor)
     return cv.resize(img, (scaled_w, scaled_h))
 
-def main(video_source: str, image: str, model: str, processed_frame_preview: bool) -> None:
-    classifier = Classifier(model, video_source = video_source, image = image)
-    classifier.start(processed_frame_preview)
+def main(video_source: str, image: str, profile_model: str, frontal_model: str, processed_frame_preview: bool) -> None:
+    profile_classifier = Classifier(profile_model, video_source = video_source, image = image)
+    frontal_classifier = Classifier(frontal_model, video_source = video_source, image = image)
+    # classifier.start(processed_frame_preview)
+    profile_process = Process(target=profile_classifier.start, args=(processed_frame_preview,))
+    frontal_process = Process(target=frontal_classifier.start, args=(processed_frame_preview,))
+
+    profile_process.start()
+    frontal_process.start()
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s: %(message)s", datefmt="%H:%M:%S")
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model', help='Cascade classifier model name', type=str, default='haarcascade_frontalface_alt.xml')
+    parser.add_argument('--model-profile', help='Cascade classifier (profile) model name. Path relative to cv2 install dir', type=str, default='haarcascade_profileface.xml')
+    parser.add_argument('--model-frontal', help='Cascade classifier (frontal) model name. Path relative to cv2 install dir', type=str, default='haarcascade_upperbody.xml')
     parser.add_argument('--source', help='Camera number or video filename', type=str, default='0')
     parser.add_argument('--image', help='Image filename', type=str)
     parser.add_argument('--processed-frame-preview', help='Show the preview of processed frame', default=False, action='store_true')
     args = parser.parse_args()
-    main(args.source, args.image, os.path.join(os.path.split(os.path.abspath(cv.__file__))[0], 'data', args.model), args.processed_frame_preview)
+    main(args.source, args.image, os.path.join(os.path.split(os.path.abspath(cv.__file__))[0], 'data', args.model_profile), os.path.join(os.path.split(os.path.abspath(cv.__file__))[0], 'data', args.model_frontal), args.processed_frame_preview)
