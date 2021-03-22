@@ -201,9 +201,9 @@ class Classifier:
                 break
         # When classification is done, print the average time needed to classify each frame
         if frames_number > 0:
-            logging.info(f"Average time needed to classify each frame {numpy.average(self.times)}")
-            logging.info(f"Max time needed to classify each frame {numpy.amax(self.times)}")
-            logging.info(f"Min time needed to classify each frame {numpy.amin(self.times)}")
+            logging.info(f"Average time needed to classify each frame {numpy.average(self.times[:self.times.index])}")
+            logging.info(f"Max time needed to classify each frame {numpy.amax(self.times[:self.times_index])}")
+            logging.info(f"Min time needed to classify each frame {numpy.amin(self.times[:self.times_index])}")
 
 def scale(img: numpy.ndarray, scale_factor: float) -> numpy.ndarray:  # scale_factor between 0 and 1 if you want to scale down the image
     """
