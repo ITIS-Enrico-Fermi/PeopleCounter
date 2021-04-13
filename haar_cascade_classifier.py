@@ -190,8 +190,8 @@ class Dispatcher:
                 processed_frame_regions_list.append(Region(x, y, w, h, self.colors[i]))
                 original_frame_regions_list.append(Region(x*scale_factor_x, y*scale_factor_y, w*scale_factor_x, h*scale_factor_y, self.colors[i+1]))
             i += 1
-           #  if processed_frame_preview:
-           #      self.display(processed_frame, processed_frame_regions_list, 'Processed frame preview')
+        if processed_frame_preview:
+            self.display(processed_frame, processed_frame_regions_list, 'Processed frame preview')
         self.__end_time()
         return original_frame_regions_list
 
