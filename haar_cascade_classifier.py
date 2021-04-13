@@ -149,7 +149,7 @@ class Dispatcher:
         :return: new frame on with the ellipse
         """
         print(region.color)
-        return cv.ellipse(frame, region.get_center().to_tuple(), (region.w // 2, region.h // 2), 0, 0, 360, region.color, 4)
+        return cv.ellipse(frame, region.get_center().to_tuple(), (region.w // 2, region.h // 2), 0, 0, 360, (0, 255, 0), 4)
     
     def preprocess(self, frame: np.ndarray):
         """
@@ -180,11 +180,10 @@ class Dispatcher:
         original_frame_regions_list: List[Region] = list()
         processed_frame_regions_list: List[Region] = list()
         i: int = 0
+        self.__start_time()
         for model_cascade in self.models_cascade:
-            self.__start_time()
             processed_frame = self.preprocess(frame)
             obj_list = model_cascade.detectMultiScale(processed_frame, scaleFactor = 1.2)
-            self.__end_time()
             scale_factor_x: float = frame.shape[1] / self.size[0]  # both shape[1] and size[0] refer to the x (width)
             scale_factor_y: float = frame.shape[0] / self.size[1]  # both shape[0] and size[1] refer to the y (height)
             for (x, y, w, h) in obj_list:
@@ -193,6 +192,7 @@ class Dispatcher:
             i += 1
            #  if processed_frame_preview:
            #      self.display(processed_frame, processed_frame_regions_list, 'Processed frame preview')
+        self.__end_time()
         return original_frame_regions_list
 
     def display(self, frame: np.ndarray, regions: List[Region], window_title: str = 'OpenCV show image', scale_factor: float = 1.0) -> None:
@@ -233,7 +233,7 @@ class Dispatcher:
         cap = cv.VideoCapture(int(self.video_source) if str.isnumeric(self.video_source) else self.video_source)
         frames_number: int = int(cap.get(cv.CAP_PROP_FRAME_COUNT))
         if frames_number > 0:  # frames_num < 0 when the video source is a camera
-            self.times = np.empty(frames_number*len(self.models_cascade), dtype='f', order='C')
+            self.times = np.empty(frames_number, dtype='f', order='C')
         if not cap.isOpened():
             logging.error("Camera video stream can't be opened")
             exit(1)
