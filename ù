@@ -6,7 +6,6 @@ import numpy as np
 import time
 from typing import Tuple, List
 from enum import Enum, auto
-from math import floor, ceil
 
 VGA_HORIZONTAL_SIZE: Tuple[int, int] = (640, 480)
 VGA_VERTICAL_SIZE: Tuple[int, int] = tuple(reversed(VGA_HORIZONTAL_SIZE))
@@ -214,8 +213,8 @@ class Dispatcher:
                 frame_processed = self.__draw_ellipse(frame_processed, region_processed)
             fh, fw = frame.shape[:2]
             fph, fpw = frame_processed.shape[:2]
-            frame_processed = cv.copyMakeBorder(frame_processed, floor((fh-fph)/2) if fh>fph else 0, ceil((fh-fph)/2) if fh>fph else 0, floor((fw-fpw)/2) if fw>fpw else 0, ceil((fw-fpw)/2) if fw>fpw else 0, cv.BORDER_CONSTANT)
-            frame = cv.copyMakeBorder(frame, floor((fph-fh)/2) if fph>fh else 0, ceil((fph-fh)/2) if fph>fh else 0, floor((fpw-fw)/2) if fpw>fw else 0, ceil((fpw-fw)/2) if fpw>fw else 0, cv.BORDER_CONSTANT)
+            frame_processed = cv.copyMakeBorder(frame_processed, (fh-fph)//2 if fh>fph else 0, (fh-fph)//2 if fh>fph else 0, (fw-fpw)//2 if fw>fpw else 0, (fw-fpw)//2 if fw>fpw else 0, cv.BORDER_CONSTANT)
+            frame = cv.copyMakeBorder(frame, (fph-fh)//2 if fph>fh else 0, (fph-fh)//2 if fph>fh else 0, (fpw-fw)//2 if fpw>fw else 0, (fpw-fw)//2 if fpw>fw else 0, cv.BORDER_CONSTANT)
             frame = np.concatenate((frame, cv.cvtColor(frame_processed, cv.COLOR_GRAY2BGR)), axis=0 if self.orientation is Orientation.HORIZONTAL else 1)
         cv.putText(frame, "test", (0, 100), cv.FONT_HERSHEY_SIMPLEX, 2, 255)
         cv.imshow(window_title, frame)
@@ -263,7 +262,7 @@ class Dispatcher:
             logging.info(f"Max time needed to classify each frame {np.amax(self.times[:self.times_index])}")
             logging.info(f"Min time needed to classify each frame {np.amin(self.times[:self.times_index])}")
 
-def scale(img: np.ndarray, scale_factor: float, min_size: Tuple[int, int] = (0, 0)) -> np.ndarray:  # scale_factor between 0 and 1 if you want to scale down the image
+def scale(img: np.ndarray, scale_factor: float, min_size: Tuple[int, int]) -> np.ndarray:  # scale_factor between 0 and 1 if you want to scale down the image
     """
     Scale an image with a scale factor
     :param np.ndarray image: original image
@@ -271,16 +270,11 @@ def scale(img: np.ndarray, scale_factor: float, min_size: Tuple[int, int] = (0, 
     """
     h = img.shape[0]
     w = img.shape[1]
-    scaled_h: int = int(h * scale_factor)
-    scaled_w: int = int(w * scale_factor)
-    if max(scaled_h, scaled_w) < min(min_size):
-        if w > min_size[0] and w - min_size[0] == max(w - min_size[0], h - min_size[1]):
-            scaled_w = min_size[0]
-            scaled_h = (h/w)*min_size[0]
-        else:
-            scaled_h = min_size[1]
-            scaled_w = (w/h)*min_size[1]
-    return cv.resize(img, (int(scaled_w), int(scaled_h)))
+    if min_size[1] > h or min_size[0] > w:  # min_size[0] -> w, min_size[1] -> h
+        return img
+    scaled_h: int = int(img.shape[0] * scale_factor)
+    scaled_w: int = int(img.shape[1] * scale_factor)
+    return cv.resize(img, (scaled_w, scaled_h))
 
 def main(video_source: str, image: str, models_name: str, processed_frame_preview: bool) -> None:
     models = list()
