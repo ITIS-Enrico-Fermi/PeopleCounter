@@ -26,11 +26,19 @@ class Point:
         """
         return (self.x, self.y)
 
+class Shape(Enum):
+    """
+    Enum to provide shape to cv methods mapping
+    """
+    RECTANGLE: int = auto()
+    CIRCLE: int = auto()
+    ELLIPSE: int = auto()
+
 class Region:
     """
     Class representing a ROI - Region Of Interest - (x, y, w, h)
     """
-    def __init__(self, x: int = 0, y: int = 0, w: int = 0, h: int = 0, color: Tuple[int, int, int] = (0, 255, 0)) -> None:
+    def __init__(self, x: int = 0, y: int = 0, w: int = 0, h: int = 0, color: Tuple[int, int, int] = (0, 255, 0), shape: Shape = Shape.RECTANGLE) -> None:
         """
         Object constructor
         x, y: coordinates of upper left point
@@ -41,6 +49,7 @@ class Region:
         self.w: int = int(w)
         self.h: int = int(h)
         self.color: Tuple[int, int, int] = color
+        self.shape: Shape = shape
 
     def get_area(self) -> int:
         """
@@ -55,6 +64,18 @@ class Region:
         :return: coordinates of ROI's cental point
         """
         return Point(self.x + self.w // 2, self.y + self.h // 2)
+    
+    def get_upper_left(self) -> Point:
+        """
+        Returns coordinate of the upper-left corner
+        """
+        return Point(self.x, self.y)
+
+    def get_bottom_right(self) -> Point:
+        """
+        Returns coordinate of the bottom-right corner
+        """
+        return Point(self.x + self.w, self.y + self.h)
 
 class Orientation(Enum):
     """
@@ -143,6 +164,24 @@ class Dispatcher:
             self.times[self.times_index] = time.time() - self.start_time_int
             self.times_index += 1
     
+    def __draw_circle(self, frame: np.ndarray, region: Region) -> np.ndarray:
+        """
+        Draw a circle around a ROI
+        :param np.ndarray frame: original frame
+        :pram Region region: ROI around which drawing the circle
+        :return: new frame on with the circle
+        """
+        return cv.circle(frame, region.get_center().to_tuple(), region.w // 2, region.color, 4)
+    
+    def __draw_rectangle(self, frame: np.ndarray, region: Region) -> np.ndarray:
+        """
+        Draw rectangle around a ROI
+        :param np.ndarray frame: original frame
+        :pram Region region: ROI around which drawing the rectangle
+        :return: new frame on with the rectangle
+        """
+        return cv.rectangle(frame, region.get_upper_left().to_tuple(), region.get_bottom_right().to_tuple(), region.color, 4)
+
     def __draw_ellipse(self, frame: np.ndarray, region: Region) -> np.ndarray:
         """
         Draw ellipse around a ROI
@@ -151,6 +190,16 @@ class Dispatcher:
         :return: new frame on with the ellipse
         """
         return cv.ellipse(frame, region.get_center().to_tuple(), (region.w // 2, region.h // 2), 0, 0, 360, region.color, 4)
+    
+    def __draw(self, frame: np.ndarray, region: Region) -> np.ndarray:
+        if region.shape is Shape.RECTANGLE:
+            return self.__draw_rectangle(frame, region)
+        elif region.shape is Shape.ELLIPSE:
+            return self.__draw_ellipse(frame, region)
+        elif region.shape is Shape.CIRCLE:
+            return self.__draw_circle(frame, region)
+        else:
+            return frame
     
     def preprocess(self, frame: np.ndarray):
         """
@@ -181,15 +230,20 @@ class Dispatcher:
         original_frame = frame
         original_frame_regions_list: List[Region] = list()
         processed_frame_regions_list: List[Region] = list()
+        shape: Shape = Shape.RECTANGLE  # Default shape
         self.__start_time()
         for model_cascade, color in zip(self.models_cascade, self.colors):
+            if len(set(model_cascade.getOriginalWindowSize())) == 1:
+                shape = Shape.ELLIPSE  # Face
+            else:
+                shape = Shape.RECTANGLE
             processed_frame = self.preprocess(frame)
             obj_list = model_cascade.detectMultiScale(processed_frame, scaleFactor = 1.2)
             scale_factor_x: float = frame.shape[1] / self.size[0]  # both shape[1] and size[0] refer to the x (width)
             scale_factor_y: float = frame.shape[0] / self.size[1]  # both shape[0] and size[1] refer to the y (height)
             for (x, y, w, h) in obj_list:
-                processed_frame_regions_list.append(Region(x, y, w, h, color))
-                original_frame_regions_list.append(Region(x*scale_factor_x, y*scale_factor_y, w*scale_factor_x, h*scale_factor_y, color))
+                processed_frame_regions_list.append(Region(x, y, w, h, color, shape))
+                original_frame_regions_list.append(Region(x*scale_factor_x, y*scale_factor_y, w*scale_factor_x, h*scale_factor_y, color, shape))
         self.__end_time()
         # if processed_frame_preview:
         #     self.display(processed_frame, processed_frame_regions_list, 'Processed frame preview')
@@ -207,7 +261,7 @@ class Dispatcher:
         :param float scale_factor: the frame will be scaled according to this value for better view
         """
         for region in regions:
-            frame: np.ndarray = self.__draw_ellipse(frame, region)
+            frame: np.ndarray = self.__draw(frame, region)
         frame = scale(frame, scale_factor, self.size)
         if frame_processed is not None and regions_processed is not None:
             for region_processed in regions_processed:
