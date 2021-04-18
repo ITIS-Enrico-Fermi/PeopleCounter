@@ -265,7 +265,7 @@ class Dispatcher:
         frame = scale(frame, scale_factor, self.size)
         if frame_processed is not None and regions_processed is not None:
             for region_processed in regions_processed:
-                frame_processed = self.__draw_ellipse(frame_processed, region_processed)
+                frame_processed = self.__draw(frame_processed, region_processed)
             fh, fw = frame.shape[:2]
             fph, fpw = frame_processed.shape[:2]
             frame_processed = cv.copyMakeBorder(frame_processed, floor((fh-fph)/2) if fh>fph else 0, ceil((fh-fph)/2) if fh>fph else 0, floor((fw-fpw)/2) if fw>fpw else 0, ceil((fw-fpw)/2) if fw>fpw else 0, cv.BORDER_CONSTANT)
