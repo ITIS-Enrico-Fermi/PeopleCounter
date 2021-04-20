@@ -7,7 +7,7 @@ import time
 from typing import Tuple, List
 from enum import Enum, auto
 from math import floor, ceil
-from utils import *
+from .utils import *
 
 VGA_HORIZONTAL_SIZE: Tuple[int, int] = (640, 480)
 VGA_VERTICAL_SIZE: Tuple[int, int] = tuple(reversed(VGA_HORIZONTAL_SIZE))
@@ -43,11 +43,11 @@ class Display:
 	    #     self.main_window_created = True
 
 	def set_orientation(self, frame: np.ndarray):
-        self.orientation = Orientation.get_orientation(frame)
-        if self.orientation is Orientation.VERTICAL:
-            self.size: Tuple[int, int] = VGA_VERTICAL_SIZE
-        elif self.orientation is Orientation.HORIZONTAL:
-            self.size: Tuple[int, int] = VGA_HORIZONTAL_SIZE
+            self.orientation = Orientation.get_orientation(frame)
+            if self.orientation is Orientation.VERTICAL:
+                self.size: Tuple[int, int] = VGA_VERTICAL_SIZE
+            elif self.orientation is Orientation.HORIZONTAL:
+                self.size: Tuple[int, int] = VGA_HORIZONTAL_SIZE
 
 def draw_circle(frame: np.ndarray, region: Region) -> np.ndarray:
     """

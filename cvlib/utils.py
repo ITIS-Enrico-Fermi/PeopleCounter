@@ -13,7 +13,7 @@ class Point:
     Class representing a point (x, y)
     """
     def __init__(self, x: int = 0, y: int = 0) -> None:
-        self.x: int = 
+        self.x: int = x
         self.y: int = y
 
     def to_tuple(self) -> Tuple[int, int]:
@@ -119,3 +119,22 @@ def random_colors(n: int) -> List[Tuple[int, int, int]]:
     b_array: np.array = np.random.choice(range(256), size=n)
     
     return list(zip(r_array.tolist(), g_array.tolist(), b_array.tolist()))
+
+def scale(img: np.ndarray, scale_factor: float, min_size: Tuple[int, int] = (0, 0)) -> np.ndarray:  # scale_factor between 0 and 1 if you want to scale down the image
+    """
+    Scale an image with a scale factor
+    :param np.ndarray image: original image
+    :param fload scale_factor: between 1 and 0 if you want to downscale the image. Scale factor bigger than 1 will increse the size of the image
+    """
+    h = img.shape[0]
+    w = img.shape[1]
+    scaled_h: int = int(h * scale_factor)
+    scaled_w: int = int(w * scale_factor)
+    if max(scaled_h, scaled_w) < min(min_size):
+        if w > min_size[0] and w - min_size[0] == max(w - min_size[0], h - min_size[1]):
+            scaled_w = min_size[0]
+            scaled_h = (h/w)*min_size[0]
+        else:
+            scaled_h = min_size[1]
+            scaled_w = (w/h)*min_size[1]
+    return cv.resize(img, (int(scaled_w), int(scaled_h)))

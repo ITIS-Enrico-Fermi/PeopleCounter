@@ -135,25 +135,6 @@ class Dispatcher:
             logging.info(f"Max time needed to classify each frame {np.amax(self.times[:self.times_index])}")
             logging.info(f"Min time needed to classify each frame {np.amin(self.times[:self.times_index])}")
 
-def scale(img: np.ndarray, scale_factor: float, min_size: Tuple[int, int] = (0, 0)) -> np.ndarray:  # scale_factor between 0 and 1 if you want to scale down the image
-    """
-    Scale an image with a scale factor
-    :param np.ndarray image: original image
-    :param fload scale_factor: between 1 and 0 if you want to downscale the image. Scale factor bigger than 1 will increse the size of the image
-    """
-    h = img.shape[0]
-    w = img.shape[1]
-    scaled_h: int = int(h * scale_factor)
-    scaled_w: int = int(w * scale_factor)
-    if max(scaled_h, scaled_w) < min(min_size):
-        if w > min_size[0] and w - min_size[0] == max(w - min_size[0], h - min_size[1]):
-            scaled_w = min_size[0]
-            scaled_h = (h/w)*min_size[0]
-        else:
-            scaled_h = min_size[1]
-            scaled_w = (w/h)*min_size[1]
-    return cv.resize(img, (int(scaled_w), int(scaled_h)))
-
 def main(video_source: str, image: str, models_name: str, processed_frame_preview: bool) -> None:
     models = list()
     for model_name in models_name:
