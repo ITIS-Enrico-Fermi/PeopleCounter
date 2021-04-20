@@ -7,10 +7,7 @@ import time
 from typing import Tuple, List
 from enum import Enum, auto
 from math import floor, ceil
-
-VGA_HORIZONTAL_SIZE: Tuple[int, int] = (640, 480)
-VGA_VERTICAL_SIZE: Tuple[int, int] = tuple(reversed(VGA_HORIZONTAL_SIZE))
-
+from cvlib import *
 
 class Dispatcher:
     """
@@ -33,10 +30,9 @@ class Dispatcher:
         self.times: np.array = None  # start will fill this attribute
         self.times_index: int = 0  # Index to keep track of times array filling
         # self.main_window_created: bool = False
-        self.size: Tuple(int, int) = tuple()  # This param will contain the destionation size of each frame. Filled after the first frame is processed
         self.is_first_frame: bool = True
         self.colors: List[Tuple[int, int, int]] = random_colors(len(models))
-        self.source_orientation: Orientation = None  # Set after the first frame is sampled
+        self.display: Display = Display()
 
     def __start_time(self) -> None:
         """
@@ -53,43 +49,6 @@ class Dispatcher:
             self.times[self.times_index] = time.time() - self.start_time_int
             self.times_index += 1
     
-    def __draw_circle(self, frame: np.ndarray, region: Region) -> np.ndarray:
-        """
-        Draw a circle around a ROI
-        :param np.ndarray frame: original frame
-        :pram Region region: ROI around which drawing the circle
-        :return: new frame on with the circle
-        """
-        return cv.circle(frame, region.get_center().to_tuple(), region.w // 2, region.color, 4)
-    
-    def __draw_rectangle(self, frame: np.ndarray, region: Region) -> np.ndarray:
-        """
-        Draw rectangle around a ROI
-        :param np.ndarray frame: original frame
-        :pram Region region: ROI around which drawing the rectangle
-        :return: new frame on with the rectangle
-        """
-        return cv.rectangle(frame, region.get_upper_left().to_tuple(), region.get_bottom_right().to_tuple(), region.color, 4)
-
-    def __draw_ellipse(self, frame: np.ndarray, region: Region) -> np.ndarray:
-        """
-        Draw ellipse around a ROI
-        :param np.ndarray frame: original frame
-        :pram Region region: ROI around which drawing the ellipse
-        :return: new frame on with the ellipse
-        """
-        return cv.ellipse(frame, region.get_center().to_tuple(), (region.w // 2, region.h // 2), 0, 0, 360, region.color, 4)
-    
-    def __draw(self, frame: np.ndarray, region: Region) -> np.ndarray:
-        if region.shape is Shape.RECTANGLE:
-            return self.__draw_rectangle(frame, region)
-        elif region.shape is Shape.ELLIPSE:
-            return self.__draw_ellipse(frame, region)
-        elif region.shape is Shape.CIRCLE:
-            return self.__draw_circle(frame, region)
-        else:
-            return frame
-    
     def preprocess(self, frame: np.ndarray):
         """
         Shared method for frame preprocessing. Frames are preprocessed only once, and then tested against several models, in order to decrease CPU laod and increase recognition speed
@@ -98,14 +57,9 @@ class Dispatcher:
         """
         frame_gray: np.ndarray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
         if self.is_first_frame:
-            orientation: Orientation = Orientation.get_orientation(frame)
-            self.orientation = orientation
-            if orientation is Orientation.VERTICAL:
-                self.size: Tuple[int, int] = VGA_VERTICAL_SIZE
-            elif orientation is Orientation.HORIZONTAL:
-                self.size: Tuple[int, int] = VGA_HORIZONTAL_SIZE
+            self.display.set_orientation(frame)
             self.is_first_frame = False
-        downscaled_frame_gray: np.ndarray = cv.resize(frame_gray, dsize = self.size, interpolation = cv.INTER_AREA)
+        downscaled_frame_gray: np.ndarray = cv.resize(frame_gray, dsize = self.display.size, interpolation = cv.INTER_AREA)
         downscaled_frame_gray_equalized: np.ndarray = cv.equalizeHist(downscaled_frame_gray)
         return downscaled_frame_gray_equalized
 
@@ -128,8 +82,8 @@ class Dispatcher:
                 shape = Shape.RECTANGLE
             processed_frame = self.preprocess(frame)
             obj_list = model_cascade.detectMultiScale(processed_frame, scaleFactor = 1.2)
-            scale_factor_x: float = frame.shape[1] / self.size[0]  # both shape[1] and size[0] refer to the x (width)
-            scale_factor_y: float = frame.shape[0] / self.size[1]  # both shape[0] and size[1] refer to the y (height)
+            scale_factor_x: float = frame.shape[1] / self.display.size[0]  # both shape[1] and size[0] refer to the x (width)
+            scale_factor_y: float = frame.shape[0] / self.display.size[1]  # both shape[0] and size[1] refer to the y (height)
             for (x, y, w, h) in obj_list:
                 processed_frame_regions_list.append(Region(x, y, w, h, color, shape))
                 original_frame_regions_list.append(Region(x*scale_factor_x, y*scale_factor_y, w*scale_factor_x, h*scale_factor_y, color, shape))
@@ -141,31 +95,6 @@ class Dispatcher:
         else:
             return original_frame_regions_list, processed_frame, processed_frame_regions_list
 
-    def display(self, frame: np.ndarray, regions: List[Region], window_title: str = 'OpenCV show image', scale_factor: float = 1.0, frame_processed: np.ndarray = None, regions_processed: List[Region] = None) -> None:
-        """
-        Display a frame drawing a series of ellipses around the regions of interest
-        :param np.ndarray frame: original frame
-        :param List[Region] regions: regions of interest list
-        :param str window_title: window's title
-        :param float scale_factor: the frame will be scaled according to this value for better view
-        """
-        for region in regions:
-            frame: np.ndarray = self.__draw(frame, region)
-        frame = scale(frame, scale_factor, self.size)
-        if frame_processed is not None and regions_processed is not None:
-            for region_processed in regions_processed:
-                frame_processed = self.__draw(frame_processed, region_processed)
-            fh, fw = frame.shape[:2]
-            fph, fpw = frame_processed.shape[:2]
-            frame_processed = cv.copyMakeBorder(frame_processed, floor((fh-fph)/2) if fh>fph else 0, ceil((fh-fph)/2) if fh>fph else 0, floor((fw-fpw)/2) if fw>fpw else 0, ceil((fw-fpw)/2) if fw>fpw else 0, cv.BORDER_CONSTANT)
-            frame = cv.copyMakeBorder(frame, floor((fph-fh)/2) if fph>fh else 0, ceil((fph-fh)/2) if fph>fh else 0, floor((fpw-fw)/2) if fpw>fw else 0, ceil((fpw-fw)/2) if fpw>fw else 0, cv.BORDER_CONSTANT)
-            frame = np.concatenate((frame, cv.cvtColor(frame_processed, cv.COLOR_GRAY2BGR)), axis=0 if self.orientation is Orientation.HORIZONTAL else 1)
-        cv.putText(frame, "test", (0, 100), cv.FONT_HERSHEY_SIMPLEX, 2, 255)
-        cv.imshow(window_title, frame)
-        # if not self.main_window_created:
-        #     cv.moveWindow(window_title, 100, 100)
-        #     self.main_window_created = True
-
     def detect_and_display(self, frame: np.ndarray, processed_frame_preview: bool) -> None:
         """
         Detect objects inside the frame, draw a ellipse around them and show the new frame
@@ -173,7 +102,7 @@ class Dispatcher:
         :param bool processed_frame_preview: am I supposed to show the processed frame?
         """
         regions, frame_p, frame_reg_p = self.detect(frame, processed_frame_preview)
-        self.display(frame, regions, 'Face detection with HCC', 0.4, frame_processed = frame_p, regions_processed = frame_reg_p)
+        self.display.show(frame, regions, 'Face detection with HCC', 0.4, frame_processed = frame_p, regions_processed = frame_reg_p)
 
     def start(self, processed_frame_preview: bool) -> None:  # Blocking method
         """
