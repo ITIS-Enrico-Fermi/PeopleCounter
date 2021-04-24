@@ -60,8 +60,8 @@ class Dispatcher:
             self.display.set_orientation(frame)
             self.is_first_frame = False
         downscaled_frame_gray: np.ndarray = cv.resize(frame_gray, dsize = self.display.size, interpolation = cv.INTER_AREA)
-        downscaled_frame_gray_equalized: np.ndarray = cv.equalizeHist(downscaled_frame_gray)
-        return downscaled_frame_gray_equalized
+        # downscaled_frame_gray_equalized: np.ndarray = cv.equalizeHist(downscaled_frame_gray)
+        return downscaled_frame_gray
 
     def detect(self, frame: np.ndarray, processed_frame_preview: bool = False) -> List[Region]:
         """

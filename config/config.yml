@@ -1,14 +1,14 @@
-min:
-  body:
-    width:
-    height:
-  face:
-    width: 
-    height:
 max:
   body:
-    width: 
-    height:
+    height: '0'
+    width: '0'
   face:
-    width: 
-    height:
+    height: '241'
+    width: '241'
+min:
+  body:
+    height: inf
+    width: inf
+  face:
+    height: '229'
+    width: '229'
