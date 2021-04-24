@@ -14,7 +14,7 @@ VGA_VERTICAL_SIZE: Tuple[int, int] = tuple(reversed(VGA_HORIZONTAL_SIZE))
 
 class Display:
 	def __init__(self):
-		self.size: Tuple(int, int) = tuple()  # This param will contain the destionation size of each frame. Filled after the first frame is processed
+		self.size: Tuple(int, int) = (0, 0)  # This param will contain the destionation size of each frame. Filled after the first frame is processed
 		self.orientation: Orientation = None  # Set after the first frame is sampled
 
 	def show(self, frame: np.ndarray, regions: List[Region], window_title: str = 'OpenCV show image', scale_factor: float = 1.0, frame_processed: np.ndarray = None, regions_processed: List[Region] = None) -> None:
@@ -36,7 +36,7 @@ class Display:
 	        frame_processed = cv.copyMakeBorder(frame_processed, floor((fh-fph)/2) if fh>fph else 0, ceil((fh-fph)/2) if fh>fph else 0, floor((fw-fpw)/2) if fw>fpw else 0, ceil((fw-fpw)/2) if fw>fpw else 0, cv.BORDER_CONSTANT)
 	        frame = cv.copyMakeBorder(frame, floor((fph-fh)/2) if fph>fh else 0, ceil((fph-fh)/2) if fph>fh else 0, floor((fpw-fw)/2) if fpw>fw else 0, ceil((fpw-fw)/2) if fpw>fw else 0, cv.BORDER_CONSTANT)
 	        frame = np.concatenate((frame, cv.cvtColor(frame_processed, cv.COLOR_GRAY2BGR)), axis=0 if self.orientation is Orientation.HORIZONTAL else 1)
-	    cv.putText(frame, "test", (0, 100), cv.FONT_HERSHEY_SIMPLEX, 2, 255)
+	    # cv.putText(frame, "test", (0, 100), cv.FONT_HERSHEY_SIMPLEX, 2, 255)
 	    cv.imshow(window_title, frame)
 	    # if not self.main_window_created:
 	    #     cv.moveWindow(window_title, 100, 100)
