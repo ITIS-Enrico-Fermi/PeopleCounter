@@ -19,7 +19,7 @@ python -m pip install -r requirements.txt
 ## Usage
 ### Typical usage
 ```
-python haar_cascade_classifier.py --source dataset/footage.mp4 --models haarcascade_profileface.xml haarcascade_frontalface_default.xml haarcascade_fullbody.xml haarcascade_upperbody.xml --processed-frame-preview
+python classifier.py --source dataset/footage.mp4 --models haarcascade_profileface.xml haarcascade_frontalface_default.xml haarcascade_fullbody.xml haarcascade_upperbody.xml --processed-frame-preview
 ```
 
 ### Save requirements
@@ -29,7 +29,7 @@ python -m pip freeze > requirements.txt
 ```
 ### How to run face detector?
 ```
-python haar_cascade_classifier.py --source dataset/maia.mp4 --processed-frame-preview
+python classifier.py --source dataset/maia.mp4 --processed-frame-preview
 ```
 Press _ESC_ to exit
 
