@@ -5,6 +5,7 @@ import os
 import numpy as np
 from typing import Dict, Tuple
 import yaml
+from ymlparser import *
 
 import sys
 sys.path.append('..')
@@ -23,14 +24,6 @@ body = cv.CascadeClassifier()
 d = Display()
 first_frame = True
 
-def load_yaml(filename: str) -> Dict:
-    with open(filename, 'r') as file:
-            config = yaml.load(file, Loader=yaml.FullLoader)
-    return config 
-
-def dump_config(config: dict, filename: str) -> None:
-    with open(filename, 'w') as file:
-        doc = yaml.dump(config, file, default_flow_style=False)
 
 def preprocess(frame: np.ndarray) -> None:
     frame = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
@@ -71,10 +64,18 @@ def calibration(video_source: str) -> Dict:
     face.load(cv.samples.findFile(face_model))
     body.load(cv.samples.findFile(body_model))
     cap = cv.VideoCapture(int(video_source) if str.isnumeric(video_source) else video_source)
+    frames_num = int(cap.get(cv.CAP_PROP_FRAME_COUNT))
+    is_file: bool = True if frames_num > 0 else False
+    if is_file:
+        step = int(frames_num*0.05)
+        current_frame = 0
     if not cap.isOpened():
         logging.error("Camera video stream can't be opened")
         exit(1)
     while True:
+        if is_file:
+            current_frame += step
+            cap.set(1, current_frame)
         ret, frame = cap.read()
         if frame is None:
             break

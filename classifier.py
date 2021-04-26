@@ -8,6 +8,7 @@ from typing import Tuple, List
 from enum import Enum, auto
 from math import floor, ceil
 from cvlib import *
+from config import config_boundarys
 
 class Dispatcher:
     """
@@ -76,12 +77,15 @@ class Dispatcher:
         shape: Shape = Shape.RECTANGLE  # Default shape
         self.__start_time()
         for model_cascade, color in zip(self.models_cascade, self.colors):
-            if len(set(model_cascade.getOriginalWindowSize())) == 1:
-                shape = Shape.ELLIPSE  # Face
+            processed_frame = self.preprocess(frame)
+            obj_list = list()
+            if len(set(model_cascade.getOriginalWindowSize())) == 1:  # Face
+                shape = Shape.ELLIPSE
+                obj_list = model_cascade.detectMultiScale(processed_frame, scaleFactor = 1.2, minSize = config_boundarys['face']['min'], maxSize = config_boundarys['face']['max'])
             else:
                 shape = Shape.RECTANGLE
-            processed_frame = self.preprocess(frame)
-            obj_list = model_cascade.detectMultiScale(processed_frame, scaleFactor = 1.2)
+                obj_list = model_cascade.detectMultiScale(processed_frame, scaleFactor = 1.2, minSize = config_boundarys['body']['min'], maxSize = config_boundarys['body']['max'])
+
             scale_factor_x: float = frame.shape[1] / self.display.size[0]  # both shape[1] and size[0] refer to the x (width)
             scale_factor_y: float = frame.shape[0] / self.display.size[1]  # both shape[0] and size[1] refer to the y (height)
             for (x, y, w, h) in obj_list:

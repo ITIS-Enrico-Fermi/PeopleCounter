@@ -1,3 +1,6 @@
 venv/*
 dataset/*
 .idea/
+config/__init__.pyc
+config/__pycache__/
+
