@@ -69,6 +69,8 @@ def calibration(video_source: str) -> Dict:
     if is_file:
         step = int(frames_num*0.05)
         current_frame = 0
+    else:  # Drop frames
+        cap.set(cv.CAP_PROP_BUFFERSIZE, 1)
     if not cap.isOpened():
         logging.error("Camera video stream can't be opened")
         exit(1)

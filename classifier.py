@@ -10,6 +10,8 @@ from math import floor, ceil
 from cvlib import *
 from config import config_boundarys
 
+FRAME_BUFFER_SIZE = 1
+
 class Dispatcher:
     """
     Collection of tools and utilities class for classification
@@ -123,6 +125,7 @@ class Dispatcher:
         frames_number: int = int(cap.get(cv.CAP_PROP_FRAME_COUNT))
         if frames_number > 0:  # frames_num < 0 when the video source is a camera
             self.times = np.empty(frames_number, dtype='f', order='C')
+            cap.set(cv.CAP_PROP_BUFFERSIZE, FRAME_BUFFER_SIZE)
         if not cap.isOpened():
             logging.error("Camera video stream can't be opened")
             exit(1)

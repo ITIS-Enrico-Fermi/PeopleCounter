@@ -1,14 +1,14 @@
 max:
   body:
-    height: '107'
-    width: '213'
+    height: '74'
+    width: '149'
   face:
-    height: '127'
-    width: '127'
+    height: '284'
+    width: '284'
 min:
   body:
-    height: '32'
-    width: '16'
+    height: '66'
+    width: '33'
   face:
-    height: '25'
-    width: '25'
+    height: '30'
+    width: '30'
