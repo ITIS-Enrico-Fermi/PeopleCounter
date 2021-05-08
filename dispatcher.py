@@ -141,21 +141,3 @@ class Dispatcher:
             logging.info(f"Average time needed to classify each frame {np.average(self.times[:self.times_index])}")
             logging.info(f"Max time needed to classify each frame {np.amax(self.times[:self.times_index])}")
             logging.info(f"Min time needed to classify each frame {np.amin(self.times[:self.times_index])}")
-
-def main(video_source: str, image: str, models_name: str, processed_frame_preview: bool) -> None:
-    models = list()
-    for model_name in models_name:
-        models.append(os.path.join(os.path.split(os.path.abspath(cv.__file__))[0], 'data', model_name))
-        
-    disp = Dispatcher(models, video_source = video_source, image = image)
-    disp.start(processed_frame_preview)
-
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s: %(message)s", datefmt="%H:%M:%S")
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--models', help='List of cascade classifier model names. Path relative to cv2 install dir', default=['haarcascade_frontalface_default.xml'], nargs='+')
-    parser.add_argument('--source', help='Camera number or video filename', type=str, default='0')
-    parser.add_argument('--image', help='Image filename', type=str)
-    parser.add_argument('--processed-frame-preview', help='Show the preview of processed frame', default=False, action='store_true')
-    args = parser.parse_args()
-    main(args.source, args.image, args.models, args.processed_frame_preview)
