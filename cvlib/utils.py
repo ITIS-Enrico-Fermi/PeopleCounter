@@ -79,6 +79,14 @@ class Region:
         Returns bounding box (x, y, w, h) of the region
         """
         return (self.x, self.y, self.w, self.h)
+    
+    def __str__(self) -> None:
+        """
+        Magic method to turn an instance in a nice formatted variable
+        """
+        return  f"Blob: ({self.x}, {self.y}, {self.w}, {self.h})\n" \
+                f"Color: {self.color}\n" \
+                f"Region: {self.shape}"
 
 class Orientation(Enum):
     """
