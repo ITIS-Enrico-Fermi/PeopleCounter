@@ -1,3 +1,12 @@
+"""
+main.py
+
+Specific implementation of the Dispatcher class to recognize and track people inside an indoor environment.
+Stats about paths followed by people, social interaction and an heatmap of the most crowded areas will be available soon
+"""
+
+__author__ = "Francesco Mecatti & the PeopleCounter team"
+
 import cv2 as cv
 import argparse
 import logging
