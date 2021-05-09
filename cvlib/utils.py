@@ -1,3 +1,11 @@
+"""
+utils.py
+
+Container for frequently used classes and functions
+"""
+
+__author__ = "Francesco Mecatti & the PeopleCounter team"
+
 import cv2 as cv
 import argparse
 import logging

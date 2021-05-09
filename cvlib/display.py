@@ -1,3 +1,11 @@
+"""
+display.py
+
+Classes and functions related to frames showing
+"""
+
+__author__ = "Francesco Mecatti & the PeopleCounter team"
+
 import cv2 as cv
 import argparse
 import logging
