@@ -1,3 +1,11 @@
+"""
+calibration.py
+
+Useful module to calibrate your detection system, so that the classifier doesn't have to search for too small or too big objects
+"""
+
+__author__ = "Francesco Mecatti & the PeopleCounter team"
+
 import cv2 as cv
 import argparse
 import logging
