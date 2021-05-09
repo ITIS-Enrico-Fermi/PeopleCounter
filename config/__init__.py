@@ -1,3 +1,14 @@
+"""
+__init__.py
+
+How to use config module?
+1. run calibration.py script
+2. make sure all the four parameters have been set
+3. exit from calibration.py's window with ESC
+4. manually adjust some values if needed
+5. import config.config_boundarys (dictionary, see below) in the main script
+"""
+
 from os import path
 from typing import Dict, Tuple
 
