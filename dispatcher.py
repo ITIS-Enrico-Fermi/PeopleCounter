@@ -11,6 +11,7 @@ from cvlib import *
 from config import config_boundarys
 
 FRAME_BUFFER_SIZE = 1
+TRACKING_ALGO = 'KCF'
 
 class Dispatcher:
     """
@@ -36,6 +37,10 @@ class Dispatcher:
         self.is_first_frame: bool = True
         self.colors: List[Tuple[int, int, int]] = random_colors(len(models))
         self.display: Display = Display()
+        self.tracked_frames: int = 0
+        self.prev_frame: np.ndarray = None
+        self.prev_regions: List[Region] = None
+        self.tracker: cv.Tracker = None
 
     def __start_time(self) -> None:
         """
@@ -109,8 +114,32 @@ class Dispatcher:
         """
         regions, frame_p, frame_reg_p = self.detect(frame, processed_frame_preview)
         self.display.show(frame, regions, 'Face detection with HCC', 0.4, frame_processed = frame_p, regions_processed = frame_reg_p)
+    
+    def track(self, frame: np.ndarray, init_regions: List[Region] = None) -> List[Region]:
+        if init_regions is not None:
+            self.tracker = cv.Tracker(TRACKING_ALGO)
+            self.tracker.init(frame, init_regions[0])
+            
+        success, blob = self.tracker.update(frame)
+        if success:
+            return blob
+        return None  # Turn error context var to true
 
-    def start(self, processed_frame_preview: bool) -> None:  # Blocking method
+    def dispatch(self, frame: np.ndarray, processed_frame_preview: bool) -> None:
+        self.tracked_frames += 1
+        regions: List[Region] = None
+        
+        if self.tracked_frames >= 60 or self.is_first_frame:
+            regions = self.detect(frame, processed_frame_preview)
+            self.track(frame, regions)
+            self.tracked_frames = 0
+        else:
+            regions = self.track(frame)
+        
+        # self.display.show(frame, regions, 'Tracked regions', .4)
+
+
+    def loop(self, processed_frame_preview: bool) -> None:  # Blocking method
         """
         Start video capture and frames classification. Be aware that it's a blocking method (it enters a loop)
         :param bool processed_frame_preview: am I supposed to show the processed frame?
@@ -133,7 +162,8 @@ class Dispatcher:
             ret, frame = cap.read()
             if frame is None:
                 break
-            self.detect_and_display(frame, processed_frame_preview)
+            self.dispatch(frame, processed_frame_preview)
+            # self.detect_and_display(frame, processed_frame_preview)
             if cv.waitKey(1) == 27:  # Key ==> 'ESC'
                 break
         # When classification is done, print the average time needed to classify each frame

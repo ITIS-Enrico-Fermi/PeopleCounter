@@ -17,7 +17,7 @@ def main(video_source, image: str, models_name: str, processed_frame_preview: bo
         models.append(os.path.join(os.path.split(os.path.abspath(cv.__file__))[0], 'data', model_name))
         
     disp = Dispatcher(models, video_source = video_source, image = image)
-    disp.start(processed_frame_preview)
+    disp.loop(processed_frame_preview)
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s: %(message)s", datefmt="%H:%M:%S")
