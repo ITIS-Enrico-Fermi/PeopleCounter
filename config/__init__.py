@@ -9,6 +9,8 @@ How to use config module?
 5. import config.config_boundarys (dictionary, see below) in the main script
 """
 
+__author__ = "Francesco Mecatti & the PeopleCounter team"
+
 from os import path
 from typing import Dict, Tuple
 
