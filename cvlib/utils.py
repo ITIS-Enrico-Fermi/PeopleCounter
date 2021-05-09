@@ -74,6 +74,12 @@ class Region:
         """
         return Point(self.x + self.w, self.y + self.h)
 
+    def to_blob(self) -> Point:
+        """
+        Returns bounding box (x, y, w, h) of the region
+        """
+        return (self.x, self.y, self.w, self.h)
+
 class Orientation(Enum):
     """
     Enum representing the orientation of a frame/image
