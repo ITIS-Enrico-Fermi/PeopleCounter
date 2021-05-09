@@ -1,3 +1,9 @@
+"""
+YAML utility functions
+"""
+
+__author__ = "Emanuele Reggiani & the PeopleCounter team"
+
 import yaml
 from typing import Dict
 
