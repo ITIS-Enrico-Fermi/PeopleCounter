@@ -12,6 +12,7 @@ from config import config_boundarys
 
 FRAME_BUFFER_SIZE = 1
 TRACKING_ALGO = 'KCF'
+TRACKING_FRAMES_NUM = 100
 
 class Dispatcher:
     """
@@ -41,6 +42,7 @@ class Dispatcher:
         self.prev_frame: np.ndarray = None
         self.prev_regions: List[Region] = None
         self.tracker: cv.Tracker = None
+        self.is_tracker_init: bool = False
 
     def __start_time(self) -> None:
         """
@@ -102,7 +104,7 @@ class Dispatcher:
         # if processed_frame_preview:
         #     self.display(processed_frame, processed_frame_regions_list, 'Processed frame preview')
         if not processed_frame_preview:
-            return original_frame_regions_list, None, None
+            return original_frame_regions_list
         else:
             return original_frame_regions_list, processed_frame, processed_frame_regions_list
 
@@ -115,28 +117,33 @@ class Dispatcher:
         regions, frame_p, frame_reg_p = self.detect(frame, processed_frame_preview)
         self.display.show(frame, regions, 'Face detection with HCC', 0.4, frame_processed = frame_p, regions_processed = frame_reg_p)
     
-    def track(self, frame: np.ndarray, init_regions: List[Region] = None) -> List[Region]:
+    def track(self, frame: np.ndarray, init_regions: List[Region] = None) -> Tuple[int, int, int, int]:
         if init_regions is not None:
-            self.tracker = cv.Tracker(TRACKING_ALGO)
-            self.tracker.init(frame, init_regions[0])
-            
+            if init_regions:
+                self.tracker = cv.TrackerKCF_create()
+                self.tracker.init(frame, init_regions[0].to_blob())
+                self.is_tracker_init = True
+            return
+
         success, blob = self.tracker.update(frame)
+        regions = [Region(*blob, self.colors[0], Shape.RECTANGLE)]
+        
         if success:
-            return blob
-        return None  # Turn error context var to true
+            return regions
+        return  # Turn error context var to true
 
     def dispatch(self, frame: np.ndarray, processed_frame_preview: bool) -> None:
         self.tracked_frames += 1
         regions: List[Region] = None
         
-        if self.tracked_frames >= 60 or self.is_first_frame:
-            regions = self.detect(frame, processed_frame_preview)
-            self.track(frame, regions)
+        if self.tracked_frames >= TRACKING_FRAMES_NUM or not self.is_tracker_init:
+            regions = self.detect(frame, False)
+            self.track(frame, regions)  # If the detection fails, the tracker is not reinitialized :)
             self.tracked_frames = 0
         else:
             regions = self.track(frame)
         
-        # self.display.show(frame, regions, 'Tracked regions', .4)
+        self.display.show(frame, regions, 'Tracked regions', .4)
 
 
     def loop(self, processed_frame_preview: bool) -> None:  # Blocking method

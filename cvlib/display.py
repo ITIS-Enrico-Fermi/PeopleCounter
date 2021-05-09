@@ -13,36 +13,37 @@ VGA_HORIZONTAL_SIZE: Tuple[int, int] = (640, 480)
 VGA_VERTICAL_SIZE: Tuple[int, int] = tuple(reversed(VGA_HORIZONTAL_SIZE))
 
 class Display:
-	def __init__(self):
-		self.size: Tuple(int, int) = (0, 0)  # This param will contain the destionation size of each frame. Filled after the first frame is processed
-		self.orientation: Orientation = None  # Set after the first frame is sampled
+    def __init__(self):
+        self.size: Tuple(int, int) = (0, 0)  # This param will contain the destionation size of each frame. Filled after the first frame is processed
+        self.orientation: Orientation = None  # Set after the first frame is sampled
 
-	def show(self, frame: np.ndarray, regions: List[Region], window_title: str = 'OpenCV show image', scale_factor: float = 1.0, frame_processed: np.ndarray = None, regions_processed: List[Region] = None) -> None:
-	    """
-	    Display a frame drawing a series of ellipses around the regions of interest
-	    :param np.ndarray frame: original frame
-	    :param List[Region] regions: regions of interest list
-	    :param str window_title: window's title
-	    :param float scale_factor: the frame will be scaled according to this value for better view
-	    """
-	    for region in regions:
-	        frame: np.ndarray = draw(frame, region)
-	    frame = scale(frame, scale_factor, self.size)
-	    if frame_processed is not None and regions_processed is not None:
-	        for region_processed in regions_processed:
-	            frame_processed = draw(frame_processed, region_processed)
-	        fh, fw = frame.shape[:2]
-	        fph, fpw = frame_processed.shape[:2]
-	        frame_processed = cv.copyMakeBorder(frame_processed, floor((fh-fph)/2) if fh>fph else 0, ceil((fh-fph)/2) if fh>fph else 0, floor((fw-fpw)/2) if fw>fpw else 0, ceil((fw-fpw)/2) if fw>fpw else 0, cv.BORDER_CONSTANT)
-	        frame = cv.copyMakeBorder(frame, floor((fph-fh)/2) if fph>fh else 0, ceil((fph-fh)/2) if fph>fh else 0, floor((fpw-fw)/2) if fpw>fw else 0, ceil((fpw-fw)/2) if fpw>fw else 0, cv.BORDER_CONSTANT)
-	        frame = np.concatenate((frame, cv.cvtColor(frame_processed, cv.COLOR_GRAY2BGR)), axis=0 if self.orientation is Orientation.HORIZONTAL else 1)
-	    # cv.putText(frame, "test", (0, 100), cv.FONT_HERSHEY_SIMPLEX, 2, 255)
-	    cv.imshow(window_title, frame)
-	    # if not self.main_window_created:
-	    #     cv.moveWindow(window_title, 100, 100)
-	    #     self.main_window_created = True
+    def show(self, frame: np.ndarray, regions: List[Region], window_title: str = 'OpenCV show image', scale_factor: float = 1.0, frame_processed: np.ndarray = None, regions_processed: List[Region] = None) -> None:
+        """
+        Display a frame drawing a series of ellipses around the regions of interest
+        :param np.ndarray frame: original frame
+        :param List[Region] regions: regions of interest list
+        :param str window_title: window's title
+        :param float scale_factor: the frame will be scaled according to this value for better view
+        """
+        if regions:
+            for region in regions:
+                frame: np.ndarray = draw(frame, region)
+        frame = scale(frame, scale_factor, self.size)
+        if frame_processed is not None and regions_processed is not None:
+            for region_processed in regions_processed:
+                frame_processed = draw(frame_processed, region_processed)
+            fh, fw = frame.shape[:2]
+            fph, fpw = frame_processed.shape[:2]
+            frame_processed = cv.copyMakeBorder(frame_processed, floor((fh-fph)/2) if fh>fph else 0, ceil((fh-fph)/2) if fh>fph else 0, floor((fw-fpw)/2) if fw>fpw else 0, ceil((fw-fpw)/2) if fw>fpw else 0, cv.BORDER_CONSTANT)
+            frame = cv.copyMakeBorder(frame, floor((fph-fh)/2) if fph>fh else 0, ceil((fph-fh)/2) if fph>fh else 0, floor((fpw-fw)/2) if fpw>fw else 0, ceil((fpw-fw)/2) if fpw>fw else 0, cv.BORDER_CONSTANT)
+            frame = np.concatenate((frame, cv.cvtColor(frame_processed, cv.COLOR_GRAY2BGR)), axis=0 if self.orientation is Orientation.HORIZONTAL else 1)
+        # cv.putText(frame, "test", (0, 100), cv.FONT_HERSHEY_SIMPLEX, 2, 255)
+        cv.imshow(window_title, frame)
+        # if not self.main_window_created:
+        #     cv.moveWindow(window_title, 100, 100)
+        #     self.main_window_created = True
 
-	def set_orientation(self, frame: np.ndarray):
+    def set_orientation(self, frame: np.ndarray):
             self.orientation = Orientation.get_orientation(frame)
             if self.orientation is Orientation.VERTICAL:
                 self.size: Tuple[int, int] = VGA_VERTICAL_SIZE
