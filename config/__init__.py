@@ -21,7 +21,7 @@ from ymlparser import load_yaml
 config_file = 'config.yml'
 config_file_path = path.join(path.dirname(__file__), config_file)
 
-config_boundarys: Dict[str, Dict[str, Tuple[int, int]]] = tuple()
+config_boundaries: Dict[str, Dict[str, Tuple[int, int]]] = tuple()
 if path.isfile(config_file_path):
     cb: Dict = load_yaml(config_file_path)
     config_boundarys = {
