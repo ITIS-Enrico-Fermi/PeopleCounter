@@ -8,7 +8,7 @@ from typing import Tuple, List
 from enum import Enum, auto
 from math import floor, ceil
 from cvlib import *
-from config import config_boundarys
+from config import config_boundaries
 
 FRAME_BUFFER_SIZE = 1
 TRACKING_ALGO = 'KCF'
@@ -90,10 +90,10 @@ class Dispatcher:
             obj_list = list()
             if len(set(model_cascade.getOriginalWindowSize())) == 1:  # Face
                 shape = Shape.ELLIPSE
-                obj_list = model_cascade.detectMultiScale(processed_frame, scaleFactor = 1.2, minSize = config_boundarys['face']['min'], maxSize = config_boundarys['face']['max'])
+                obj_list = model_cascade.detectMultiScale(processed_frame, scaleFactor = 1.2, minSize = config_boundaries['face']['min'], maxSize = config_boundaries['face']['max'])
             else:
                 shape = Shape.RECTANGLE
-                obj_list = model_cascade.detectMultiScale(processed_frame, scaleFactor = 1.2, minSize = config_boundarys['body']['min'], maxSize = config_boundarys['body']['max'])
+                obj_list = model_cascade.detectMultiScale(processed_frame, scaleFactor = 1.2, minSize = config_boundaries['body']['min'], maxSize = config_boundaries['body']['max'])
 
             scale_factor_x: float = frame.shape[1] / self.display.size[0]  # both shape[1] and size[0] refer to the x (width)
             scale_factor_y: float = frame.shape[0] / self.display.size[1]  # both shape[0] and size[1] refer to the y (height)
