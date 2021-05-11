@@ -24,7 +24,7 @@ config_file_path = path.join(path.dirname(__file__), config_file)
 config_boundaries: Dict[str, Dict[str, Tuple[int, int]]] = tuple()
 if path.isfile(config_file_path):
     cb: Dict = load_yaml(config_file_path)
-    config_boundarys = {
+    config_boundaries = {
             'face': {
                 'min': (int(cb['min']['face']['width']), int(cb['min']['face']['height'])),
                 'max': (int(cb['max']['face']['width']), int(cb['max']['face']['height']))
