@@ -30,13 +30,13 @@ class Dispatcher:
     No errors will be thrown, if an error occurs the state of 'error' context variable will turn to True
     """
 
-    def __init__(self, video_source: str = None, image = None) -> None:
+    def __init__(self) -> None:
         """
         Constructor of the class Classifier
         :param List[str] models: relative path to the xml models
         :param str video_source: video source. If video_source is a string, it's supposed to be the relative path to a file, else video_source is converted to an integer and the video stream is treated like a cam
         """
-        self.models_cascade: List[cv.CascadeClassifier] = list()
+        self.models: List[cv.CascadeClassifier] = list()
         self.source = None  # Either a number (webcam) or a string (video file)
         self.frame: np.ndarray = None
         # self.video_source: str = video_source  # video_source == None if the classifier will be used on an image
@@ -46,11 +46,9 @@ class Dispatcher:
         self.times_index: int = 0  # Index to keep track of times array filling
         # self.main_window_created: bool = False
         self.is_first_frame: bool = True
-        self.colors: List[Tuple[int, int, int]] = random_colors(len(models))
+        self.colors: List[Tuple[int, int, int]] = None
         self.display: Display = Display()
         self.tracked_frames: int = 0
-        self.prev_frame: np.ndarray = None
-        self.prev_regions: List[Region] = None
         self.tracker: cv.Tracker = None
         self.is_tracker_init: bool = False
         self.is_error: bool = False
@@ -79,9 +77,10 @@ class Dispatcher:
         return inner
 
     @error_check
-    def set_source(self, source: str) -> Dispatcher:
+    def set_source(self, source) -> Dispatcher:
         """
         Set video source
+        :param str source: video source. It can be either a webcam (integer) or a file (string)
         :return: current object with source set
         """
         self.source = int(source) if str.isnumeric(source) else source
@@ -91,6 +90,7 @@ class Dispatcher:
     def set_preview_processed_frame(self, preview: bool) -> Dispatcher:
         """
         Set processed frame preview
+        :param bool preview: True when the preprocessed frame should be displayed
         :return: current object with preview flag set
         """
         self.preview = preview
@@ -99,18 +99,22 @@ class Dispatcher:
     @error_check
     def add_model(self, model_name: str, boundaries: Dict[str, Tuple[int, int]] = None) -> Dispatcher:
         """
-        Retrieve path to the model and load it
+        Retrieve path to the model and load
+        :param str model_name: relative path to xml model
+        :param Dict[str, Tuple[int, int]] boundaries: dict containing min and max size of the object described by the model
         :return: current object, with an updated version of models list
         """
         model = cv.CascadeClassifier()
         model.load(cv.samples.findFile(model_name))
-        self.models_cascade.append(model)
+        self.models.append(model)
+        self.colors = random_colors(len(self.models))
         return self
     
     @error_check
     def bind_tracker(self, tracker: Tracker) -> Dispatcher:
         """
         Bind tracker object. The tracker must implement .init() and .update() methods. See Tracker interface
+        :param Tracker tracker: implementation of Tracker interface
         :return: Current object, with tracker set
         """
         # TODO check class and set error, implement Tracker
@@ -121,6 +125,7 @@ class Dispatcher:
     def bind_detector(self, detector: Detector) -> Dispatcher:
         """
         Bind detector object. See Detector interface
+        :param Detector detector: implementation of Detector interface
         :return: Current object with detector binded
         """
         # TODO check class and set error, implement Detector
@@ -162,20 +167,18 @@ class Dispatcher:
         self.frame_light = cv.cvtColor(self.frame, cv.COLOR_BGR2GRAY)
         self.frame_light = cv.resize(self.frame_light, dsize = self.display.size, interpolation = cv.INTER_AREA)
         # downscaled_frame_gray_equalized: np.ndarray = cv.equalizeHist(downscaled_frame_gray)
-        return self.frame_light
+        return self.frame_light  # New frame is both set as a context variable and returned from by this method
 
     def detect(self) -> List[Region]:
         """
         Detect objects according to the model
-        :param np.ndarray frame: frame against which run the classifier
-        :param bool processed_frame_preview: am I supposed to show the processed frame?
         :return: a list of regions where the object has been found
         """
         original_frame_regions: List[Region] = list()
         processed_frame_regions: List[Region] = list()
         shape: Shape = Shape.RECTANGLE  # Default shape
         self.__start_time()
-        for model, color in zip(self.models_cascade, self.colors):
+        for model, color in zip(self.models, self.colors):
             processed_frame = self.preprocess(frame)
             obj_list = list()
             if len(set(model_cascade.getOriginalWindowSize())) == 1:  # Face
