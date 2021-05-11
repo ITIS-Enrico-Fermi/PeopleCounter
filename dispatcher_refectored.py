@@ -16,7 +16,7 @@ from typing import Tuple, List
 from enum import Enum, auto
 from math import floor, ceil
 from cvlib import *
-from config import config_boundarys
+from config import config_boundaries
 
 FRAME_BUFFER_SIZE = 1
 TRACKING_ALGO = 'KCF'
@@ -88,7 +88,16 @@ class Dispatcher:
         return self
 
     @error_check
-    def add_model(self, model_name: str) -> Dispatcher:
+    def set_preview_processed_frame(self, preview: bool) -> Dispatcher:
+        """
+        Set processed frame preview
+        :return: current object with preview flag set
+        """
+        self.preview = preview
+        return self
+
+    @error_check
+    def add_model(self, model_name: str, boundaries: Dict[str, Tuple[int, int]] = None) -> Dispatcher:
         """
         Retrieve path to the model and load it
         :return: current object, with an updated version of models list
@@ -141,8 +150,8 @@ class Dispatcher:
         if not str.isnumeric(self.video_source):  # If the video source is not a cam
             self.times[self.times_index] = time.time() - self.start_time_int
             self.times_index += 1
-
-    def preprocess(self) -> None:
+    
+    def preprocess(self) -> np.ndarray:
         """
         Shared method for frame preprocessing. Frames are preprocessed only once, and then tested against several models, in order to decrease CPU laod and increase recognition speed.
         Final frame (preprocessed) is set as a context variable
@@ -153,5 +162,39 @@ class Dispatcher:
         self.frame_light = cv.cvtColor(self.frame, cv.COLOR_BGR2GRAY)
         self.frame_light = cv.resize(self.frame_light, dsize = self.display.size, interpolation = cv.INTER_AREA)
         # downscaled_frame_gray_equalized: np.ndarray = cv.equalizeHist(downscaled_frame_gray)
-    
-    def detect(self)
+        return self.frame_light
+
+    def detect(self) -> List[Region]:
+        """
+        Detect objects according to the model
+        :param np.ndarray frame: frame against which run the classifier
+        :param bool processed_frame_preview: am I supposed to show the processed frame?
+        :return: a list of regions where the object has been found
+        """
+        original_frame_regions: List[Region] = list()
+        processed_frame_regions: List[Region] = list()
+        shape: Shape = Shape.RECTANGLE  # Default shape
+        self.__start_time()
+        for model, color in zip(self.models_cascade, self.colors):
+            processed_frame = self.preprocess(frame)
+            obj_list = list()
+            if len(set(model_cascade.getOriginalWindowSize())) == 1:  # Face
+                shape = Shape.ELLIPSE
+                obj_list = model_cascade.detectMultiScale(processed_frame, scaleFactor = 1.2, minSize = config_boundaries['face']['min'], maxSize = config_boundaries['face']['max'])
+            else:
+                shape = Shape.RECTANGLE
+                obj_list = model_cascade.detectMultiScale(processed_frame, scaleFactor = 1.2, minSize = config_boundaries['body']['min'], maxSize = config_boundaries['body']['max'])
+
+            scale_factor_x: float = frame.shape[1] / self.display.size[0]  # both shape[1] and size[0] refer to the x (width)
+            scale_factor_y: float = frame.shape[0] / self.display.size[1]  # both shape[0] and size[1] refer to the y (height)
+            for (x, y, w, h) in obj_list:
+                processed_frame_regions_list.append(Region(x, y, w, h, color, shape))
+                original_frame_regions_list.append(Region(x*scale_factor_x, y*scale_factor_y, w*scale_factor_x, h*scale_factor_y, color, shape))
+        self.__end_time()
+        # if processed_frame_preview:
+        #     self.display(processed_frame, processed_frame_regions_list, 'Processed frame preview')
+        if not processed_frame_preview:
+            return original_frame_regions_list
+        else:
+            return original_frame_regions_list, processed_frame, processed_frame_regions_list
+
