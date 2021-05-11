@@ -3,4 +3,5 @@ dataset/*
 .idea/
 config/__init__.pyc
 config/__pycache__/
+cvlib/__pycache__/
 __pycache__/
