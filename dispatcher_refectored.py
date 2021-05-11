@@ -19,7 +19,6 @@ from cvlib import *
 from config import config_boundaries
 
 FRAME_BUFFER_SIZE = 1
-TRACKING_ALGO = 'KCF'
 TRACKING_FRAMES_NUM = 100
 
 class Dispatcher:
