@@ -17,7 +17,7 @@ from typing import Tuple, List
 from enum import Enum, auto
 from math import floor, ceil
 from cvlib import *
-from config import config_boundarys
+from config import config_boundaries
 from dispatcher import Dispatcher
 
 def main(video_source, image: str, models_name: str, processed_frame_preview: bool) -> None:
