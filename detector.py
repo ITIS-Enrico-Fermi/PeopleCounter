@@ -11,6 +11,7 @@ import os
 import numpy as np
 import time
 from cvlib import *
+from abc import ABC, ABCMeta, abstractmethod
 
 def context_error(f):
     """
@@ -28,10 +29,13 @@ def context_error(f):
             return self
     return inner
 
-class Detector:
+class Detector(ABC):
     """
     Abstract class to provide a common interface to different detectors implementation
+    Create a sublcass in which detect() and config() are implemented
     """
+
+    __metaclass__ = ABCMeta
     
     def __init__(self):
         """
@@ -43,10 +47,12 @@ class Detector:
         self._error: Exception = None
         self._colors: List[Tuple[int, int, int]] = list()
         self._model = None
-    
-    @staticmethod
-    def create():
-        return Detector()
+        
+        self.config()
+
+    @classmethod
+    def create(cls):
+        return cls()
 
     @context_error
     def set_model(self, model):
@@ -67,12 +73,14 @@ class Detector:
     def get_regions(self) -> List[Region]:
         return self._regions
 
+    @abstractmethod
     def config(self) -> None:
         """
         Initialization function
         """
         pass
-
+    
+    @abstractmethod
     def detect(self, frame: np.ndarray) -> bool:
         """
         Main method to detect 
