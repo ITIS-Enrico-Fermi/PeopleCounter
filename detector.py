@@ -29,7 +29,7 @@ def context_error(f):
             return self
     return inner
 
-class Detector(ABC):
+class Detector():
     """
     Abstract class to provide a common interface to different detectors implementation
     Create a sublcass in which detect() and config() are implemented
@@ -39,7 +39,7 @@ class Detector(ABC):
     
     def __init__(self):
         """
-        Don't override this method. If you want to do some initialization, implement .config() method
+        Don't override this method. If you want to do some initialization before setter methods are called, implement .init()
         """
         self._detector = None
         self._regions: List[Region] = None  # Detected regions
@@ -48,7 +48,7 @@ class Detector(ABC):
         self._colors: List[Tuple[int, int, int]] = list()
         self._model = None
         
-        self.config()
+        self.init()
 
     @classmethod
     def create(cls):
@@ -74,9 +74,25 @@ class Detector(ABC):
         return self._regions
 
     @abstractmethod
+    def init(self) -> None:
+        """
+        Initialization function called before setter methods
+        """
+        pass
+    
+    @context_error
+    def run_config(self):
+        """
+        Run config in a "safe" way, keeping error inside the context
+        This should be the last call of the chained methods stack
+        """
+        self.config()
+        return self
+
+    @abstractmethod
     def config(self) -> None:
         """
-        Initialization function
+        Initialization function called after setters
         """
         pass
     
