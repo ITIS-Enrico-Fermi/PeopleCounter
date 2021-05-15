@@ -15,7 +15,9 @@ from abc import ABC, ABCMeta, abstractmethod
 
 def context_error(f):
     """
-    Decorator for error checking/handling. This way methods don't throw error messages, everything stays inside the context
+    Decorator for error checking/handling.
+    This way methods don't throw error messages,
+    everything stays inside the context
     """
     def inner(*args, **kwargs):
         self = args[0]
@@ -39,7 +41,9 @@ class Detector():
     
     def __init__(self):
         """
-        Don't override this method. If you want to do some initialization before setter methods are called, implement .init()
+        Don't override this method
+        If you want to do some initialization before
+        setter methods are called, implement .init()
         """
         self._detector = None
         self._regions: List[Region] = list()  # Detected regions
@@ -83,7 +87,7 @@ class Detector():
     @context_error
     def run_config(self):
         """
-        Run config in a "safe" way, keeping error inside the context
+        Run config in a "safe" way, keeping errors inside the context
         This should be the last call of the chained methods stack
         """
         self.config()
