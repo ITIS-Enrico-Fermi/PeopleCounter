@@ -3,8 +3,6 @@ from detector import Detector
 import os
 from sys import argv
 
-d = None
-
 class FrontalFaceDetector(Detector):
     def config(self):
         filename = self._model
