@@ -1,3 +1,11 @@
+"""
+detector_example.py
+
+This script shows how to use Detector class
+"""
+
+__author__ = "Francesco Mecatti & the PeopleCounter Team"
+
 import cv2 as cv
 from detector import Detector
 import os

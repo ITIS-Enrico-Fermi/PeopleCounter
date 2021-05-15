@@ -1,3 +1,11 @@
+"""
+detector_multiplexer_example.py
+
+This script shows how to use DetectorMultiplexer class
+"""
+
+__author__ = "Francesco Mecatti & the PeopleCounter Team"
+
 import os
 import cv2 as cv
 from sys import argv
