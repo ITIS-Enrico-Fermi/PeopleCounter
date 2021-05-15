@@ -42,7 +42,7 @@ class Detector():
         Don't override this method. If you want to do some initialization before setter methods are called, implement .init()
         """
         self._detector = None
-        self._regions: List[Region] = None  # Detected regions
+        self._regions: List[Region] = list()  # Detected regions
         self._is_error = False
         self._error: Exception = None
         self._colors: List[Tuple[int, int, int]] = list()
@@ -107,11 +107,16 @@ class Detector():
 class DetectorMultiplexer(Detector):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._detectors: List[Detector] = None
-
+        self._detectors: List[Detector] = list()
+    
+    @staticmethod
+    def create():
+        return DetectorMultiplexer()
+    
     def multidetect(self, frame: np.ndarray) -> bool:
-        for detector in self.__detectors:
-            self._regions.append(detector.detect(frame))
+        for detector in self._detectors:
+            detector.detect(frame)
+            self._regions.append(detector.get_regions())
     
     @context_error
     def add_detector(self, detector):
