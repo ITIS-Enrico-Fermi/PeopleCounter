@@ -67,7 +67,7 @@ class Detector:
         """
         pass
 
-    def detect(self, frame) -> bool:
+    def detect(self, frame: np.ndarray) -> bool:
         """
         Main method to detect 
         :return: if something has been recognized
@@ -80,21 +80,17 @@ class DetectorMultiplexer(Detector):
         self.__detectors: List[Detector] = None
 
     def detect(self, frame: np.ndarray) -> bool:
-
-
+        for detector in self.__detectors:
+            self.__regions.append(detector.detect(frame))
 
     @error_check
-    def add_detector(self, model_name: str, boundaries: Dict[str, Tuple[int, int]] = None) -> Dispatcher:
+    def add_detector(self, detector) -> Dispatcher:
         """
-        Retrieve path to the model and load
-        :param str model_name: relative path to xml model
-        :param Dict[str, Tuple[int, int]] boundaries: dict containing min and max size of the object described by the model
-        :return: current object, with an updated version of models list
+        Add detector to the context list
+        :param Detector detector: detector object
+        :return: current instance, with an updated version of __detectors list
         """
-        model = cv.CascadeClassifier()
-        model.load(cv.samples.findFile(model_name))
-        self.__models.append(model)
-        self.__colors = random_colors(len(self.models))
+        self.__detectors.append(detector)        
         return self
 
 
