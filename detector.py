@@ -10,52 +10,64 @@ import cv2 as cv
 import os
 import numpy as np
 import time
-import cvlib import *
+from cvlib import *
+
+def error_check(f):
+    """
+    Decorator for error checking/handling. This way methods don't throw error messages, everything stays inside the context
+    """
+    print(f)
+    def inner(*args, **kwargs):
+        self = args[0]
+        print(args)
+        # Chain of waterfall methods is broken if error
+        try:
+            f(*args, **kwargs)
+        except Exception as e:
+            print('error')
+            print(self.__is_error)
+            self.__is_error = True
+            print(self.__is_error)
+            self.__error = e
+        finally:
+            return self
+    return inner
 
 class Detector:
     """
     Abstract class to provide a common interface to different detectors implementation
     """
     
-    def __init__(self) -> None:
+    def __init__(self):
         """
         Don't override this method. If you want to do some initialization, implement .config() method
         """
         self.__detector = None
         self.__regions: List[Region] = None  # Detected regions
         self.__is_error = False
-        self.__error: Error = None
+        self.__error: Exception = None
         self.__colors: List[Tuple[int, int, int]] = list()
         self.__model = None
-
-    def error_check(f):
-        """
-        Decorator for error checking/handling. This way methods don't throw error messages, everything stays inside the context
-        """
-        def inner(self, *args, **kwargs):
-            if self.__is_error:  # Chain of waterfall methods is broken if error
-                return self
-            try:
-                f(self, *args, **kwargs)
-            except Error as e:
-                self.__is_error = True
-                self.__error = e
-        return inner
+    
+    @staticmethod
+    def create():
+        return Detector()
 
     @error_check
-    def set_model(self, model) -> Dispatcher:
+    def set_model(self, model):
+        raise Exception('test')
         self.__model = model
         return self
 
     @error_check
-    def bind_detector_implementation(self, detector) -> Dispatcher:
+    def bind_detector_implementation(self, detector):
         self.__detector = detector
         return self
 
     def is_error(self) -> bool:
         return self.__is_error
 
-    def get_error(self) -> Error:
+    def get_error(self) -> Exception:
         return self.__error
 
     def get_regions(self) -> List[Region]:
@@ -79,12 +91,12 @@ class DetectorMultiplexer(Detector):
         super().__init__(*args, **kwargs)
         self.__detectors: List[Detector] = None
 
-    def detect(self, frame: np.ndarray) -> bool:
+    def multidetect(self, frame: np.ndarray) -> bool:
         for detector in self.__detectors:
             self.__regions.append(detector.detect(frame))
-
+    
     @error_check
-    def add_detector(self, detector) -> Dispatcher:
+    def add_detector(self, detector):
         """
         Add detector to the context list
         :param Detector detector: detector object
