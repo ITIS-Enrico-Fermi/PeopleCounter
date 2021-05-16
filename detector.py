@@ -33,8 +33,11 @@ def context_error(f):
 
 class Detector():
     """
-    Abstract class to provide a common interface to different detectors implementation
-    Create a sublcass in which detect() and config() are implemented
+    Abstract class to provide a
+		common interface to different
+		detectors implementation
+    Create a sublcass in which
+		detect() and config() are implemented
     """
 
     __metaclass__ = ABCMeta

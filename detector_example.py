@@ -27,7 +27,9 @@ class FrontalFaceDetector(Detector):
 		return True
 
 if __name__ == "__main__":
-	if len(argv) == 2:  # The second parameter is the filename of the image to be tested against detectors
+	# The second parameter is the filename
+	# of the image to be tested against detectors
+	if len(argv) == 2:
 		d = (FrontalFaceDetector
 			.create()
 			.set_model('OpencvModels/haarcascade_frontalface_default.xml')
