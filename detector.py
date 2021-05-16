@@ -103,16 +103,17 @@ class DetectorMultiplexer(Detector):
 		return DetectorMultiplexer()
 	
 	def multidetect(self, frame) -> bool:
+		self._regions = list()
 		for detector in self._detectors:
 			detector.detect(frame)
 			self._regions.append(detector.get_regions())
 
 	@context_error
-	def add_detector(self, detector):
+	def add_detector(self, detector: Detector):
 		"""
 		Add detector to the context list
 		:param Detector detector: detector object
-		:return: current instance, with an updated version of __detectors list
+		:return: current instance, with an updated version of _detectors list
 		"""
 		self._detectors.append(detector)        
 		return self
