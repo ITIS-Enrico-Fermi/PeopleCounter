@@ -13,6 +13,7 @@ import time
 from cvlib import *
 from abc import ABC, ABCMeta, abstractmethod
 from common import context_error
+from copy import deepcopy, copy
 
 class Tracker():
 	"""
@@ -40,10 +41,34 @@ class Tracker():
 		self._is_init: bool = False
 
 		self.init()
+	
+	def __copy__(self):
+		cls = self.__class__
+		rslt = cls.__new__(cls)
+		rslt.__dict__.update(self.__dict__)
+		return rslt
+
+	def __deepcopy__(self, memo):
+		cls = self.__class__
+		rslt = cls.__new__(cls)
+		memo[id(self)] = rslt
+		for k, v in self.__dict__.items():
+			if 'Tracker' in v.__class__.__name__ \
+				and v.__class__.__module__ == 'cv2':
+				setattr(rslt, k, v.__class__.create())
+				continue
+			setattr(rslt, k, deepcopy(v, memo))
+		return rslt		
 
 	@classmethod
 	def create(cls):
 		return cls()
+
+	def copy(self):
+		"""
+		Return a copy of the current object
+		"""
+		return deepcopy(self)
 
 	@context_error
 	def set_tracker(self, tracker):
@@ -112,29 +137,37 @@ class Tracker():
 		:return: if something has been recognized
 		"""
 		pass
-'''
-class DetectorMultiplexer(Detector):
+
+class TrackerMultiplexer(Tracker):
+	"""
+	Track multiple regionsfo the same frame
+	"""
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
-		self._detectors: List[Detector] = list()
+		self._trackers: List[Tracker] = list()
+		self._regions: List[Region] = list()
 	
 	@staticmethod
 	def create():
-		return DetectorMultiplexer()
+		return TrackerMultiplexer()
 	
-	def multidetect(self, frame) -> bool:
-		for detector in self._detectors:
-			detector.detect(frame)
-			self._regions.append(detector.get_regions())
+	def multitrack(self, frame) -> bool:
+		self._regions = list()
+		for tracker in self._trackers:
+			tracker.track(frame)
+			self._regions.append(\
+				tracker.get_region())
 
+	def get_regions(self) -> List[Region]:
+		return self._regions
+	
 	@context_error
-	def add_detector(self, detector):
+	def add_tracker(self, tracker: Tracker):
 		"""
-		Add detector to the context list
-		:param Detector detector: detector object
-		:return: current instance, with an updated version of __detectors list
+		Add tracker o the context list
+		:param Tracker tracker: tracker object
+		:return: current instance, with an updated version of _trackers list
 		"""
-		self._detectors.append(detector)        
+		self._trackers.append(tracker)        
 		return self
 
-'''

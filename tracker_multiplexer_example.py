@@ -1,5 +1,5 @@
 """
-tracker_example.py
+tracker_multiplexer_example.py
 
 This script shows how to use Tracker class
 """
@@ -8,7 +8,7 @@ __author__ = "Francesco Mecatti & the PeopleCounter Team"
 
 import os
 import cv2 as cv
-from tracker import Tracker
+from tracker import Tracker, TrackerMultiplexer
 from sys import argv
 from cvlib import Shape, Region, Display
 
@@ -39,6 +39,9 @@ if __name__ == "__main__":
 			.set_tracker(
 				tracker_implementation))
 
+		tm = (TrackerMultiplexer
+			.create())
+
 		d = Display()
 		
 		cap = cv.VideoCapture(argv[1])
@@ -46,29 +49,39 @@ if __name__ == "__main__":
 			ret, frame = cap.read()
 			if frame is None:
 				break
-			if cv.waitKey(1) == 27:
+			if cv.waitKey(1) & 0xFF == 27:
 				break
 			if not t.is_init():
-				# The user selects one
-				# region of interest
-				roi = cv.selectROI(frame)
-				(t
-					.set_frame(frame)
-					.set_region(
-						Region(*roi,
-							(255, 0, 0),
-							Shape.RECTANGLE))
-					.run_config())
+				# The user selects one or
+				# more regions of interest
+				while True:
+					roi =	cv.selectROI(frame)
+					t = (t
+						.copy()
+						.set_frame(frame)
+						.set_region(
+							Region(*roi,
+								(255, 0, 0),
+								Shape.RECTANGLE))
+						.run_config())
+					tm.add_tracker(t)
+					
+					# Press ENTER for the second time
+					# (the first one confirms roi selection)
+					# to add another region to the list
+					print('Press ENTER to select another region')
+					if cv.waitKey(0) & 0xFF != 13:  # Wait forever
+						break
 			
 				if t.is_error():
 					print(f"An error occurred: {t.get_error()}")
 				
 				continue
 
-			t.track(frame)
+			tm.multitrack(frame)
 			d.show(
 				frame,
-				[t.get_region()],
+				tm.get_regions(),
 				"Tracking"
 			)
 				
