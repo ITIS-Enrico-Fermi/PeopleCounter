@@ -136,7 +136,7 @@ def error_check(f):
 		Decorator for dispatching algo registration
 		"""
 		def inner(self):
-				self.dispatching_algo = f
+			self.dispatching_algo = f
 		return f
 
 	def __start_time(self) -> None:

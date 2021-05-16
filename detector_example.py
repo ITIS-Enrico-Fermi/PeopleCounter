@@ -6,9 +6,9 @@ This script shows how to use Detector class
 
 __author__ = "Francesco Mecatti & the PeopleCounter Team"
 
+import os
 import cv2 as cv
 from detector import Detector
-import os
 from sys import argv
 
 class FrontalFaceDetector(Detector):

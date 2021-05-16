@@ -1,7 +1,8 @@
 """
-detector.py
+tracker.py
 
-Detector abstract class to provide a common interface for different detectors (Haar cascade, Yolo, Darknet, Kersas and so forth)
+Tracker abstract class to provide a common interface for different trackers 
+A Tracker objects keeps paths, shots ecc ecc inside its context
 """
 
 __author__ = "Francesco Mecatti & the PeopleCounter team"
@@ -13,11 +14,11 @@ from cvlib import *
 from abc import ABC, ABCMeta, abstractmethod
 from common import context_error
 
-class Detector():
+class Tracker():
 	"""
 	Abstract class to provide a
 	common interface to different
-	detector implementations
+	tracker implementations
 	Create a sublcass in which
 	detect() and config() are implemented
 	"""
@@ -30,13 +31,14 @@ class Detector():
 		If you want to do some initialization before
 		setter methods are called, implement .init()
 		"""
-		self._detector = None
-		self._regions: List[Region] = list()  # Detected regions
+		self._tracker = None
+		self._region: Region = None  # Init region, after that tracked region
+		self._init_frame = None
 		self._is_error = False
 		self._error: Exception = None
-		self._colors: List[Tuple[int, int, int]] = list()
-		self._model = None
-		
+		self._blob_history: List[Tuple[int, int, int, int]] = None
+		self._is_init: bool = False
+
 		self.init()
 
 	@classmethod
@@ -44,13 +46,22 @@ class Detector():
 		return cls()
 
 	@context_error
-	def set_model(self, model):
-		self._model = model
+	def set_tracker(self, tracker):
+		self._tracker = tracker
 		return self
 
-	@context_error
-	def bind_detector_implementation(self, detector):
-		self._detector = detector
+	def set_region(self, region):
+		"""
+		set initialization region
+		"""
+		self._region = region
+		return self
+
+	def set_frame(self, frame):
+		"""
+		set initialization frame
+		"""
+		self._init_frame = frame
 		return self
 
 	def is_error(self) -> bool:
@@ -59,8 +70,14 @@ class Detector():
 	def get_error(self) -> Exception:
 		return self._error
 
-	def get_regions(self) -> List[Region]:
-		return self._regions
+	def get_region(self) -> Region:
+		return self._region
+
+	def get_history(self) -> List[Tuple[int, int, int, int]]:
+		return self._blob_history
+
+	def is_init(self) -> bool:
+		return self._is_init
 
 	@abstractmethod
 	def init(self) -> None:
@@ -68,7 +85,7 @@ class Detector():
 		Initialization function called before setter methods
 		"""
 		pass
-
+	
 	@context_error
 	def run_config(self):
 		"""
@@ -76,23 +93,26 @@ class Detector():
 		This should be the last call of the chained methods stack
 		"""
 		self.config()
+		# Init process completed
+		self._is_init = True
 		return self
 
 	@abstractmethod
 	def config(self) -> None:
 		"""
 		Initialization function called after setters
-		"""
-		pass
-	
-	@abstractmethod
-	def detect(self, frame) -> bool:
-		"""
-		Main method to detect 
-		:return: if something has been recognized
+		Initialize your tracker here
 		"""
 		pass
 
+	@abstractmethod
+	def track(self, frame) -> bool:
+		"""
+		Main method to track objects
+		:return: if something has been recognized
+		"""
+		pass
+'''
 class DetectorMultiplexer(Detector):
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
@@ -117,4 +137,4 @@ class DetectorMultiplexer(Detector):
 		self._detectors.append(detector)        
 		return self
 
-
+'''
