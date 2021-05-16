@@ -51,10 +51,13 @@ if __name__ == "__main__":
 			if not t.is_init():
 				# The user selects one or
 				# more regions of interest
-				rois = cv.selectROI(frame)
+				roi = cv.selectROI(frame)
 				(t
 					.set_frame(frame)
-					.set_region(Region(*rois, (255, 0, 0), Shape.RECTANGLE))
+					.set_region(
+						Region(*roi,
+							(255, 0, 0),
+							Shape.RECTANGLE))
 					.run_config())
 			
 				if t.is_error():
