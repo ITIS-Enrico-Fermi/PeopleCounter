@@ -34,8 +34,9 @@ class Detector():
 		self._regions: List[Region] = list()  # Detected regions
 		self._is_error = False
 		self._error: Exception = None
-		self._colors: List[Tuple[int, int, int]] = list()
+		self._color: Tuple[int, int, int] = None
 		self._model = None
+		self._shape: Shape = None
 		
 		self.init()
 
@@ -47,6 +48,16 @@ class Detector():
 	def set_model(self, model):
 		self._model = model
 		return self
+	
+	@context_error
+	def set_color(self, color: Tuple[int, int, int]):
+		self._color = color
+		return self
+
+	@context_error
+	def set_shape(self, shape: Shape):
+		self._shape = shape
+		return shape
 
 	@context_error
 	def bind_detector_implementation(self, detector):
