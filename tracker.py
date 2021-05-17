@@ -15,6 +15,7 @@ from abc import ABC, ABCMeta, abstractmethod
 from common import context_error
 from copy import deepcopy, copy
 
+
 class Tracker():
 	"""
 	Abstract class to provide a
@@ -37,7 +38,7 @@ class Tracker():
 		self._init_frame = None
 		self._is_error = False
 		self._error: Exception = None
-		self._blob_history: List[Tuple[int, int, int, int]] = None
+		self._roi_history: List[np.ndarray] = list()
 		self._is_init: bool = False
 
 		self.init()
@@ -58,15 +59,26 @@ class Tracker():
 				setattr(rslt, k, v.__class__.create())
 				continue
 			setattr(rslt, k, deepcopy(v, memo))
-		return rslt		
+		return rslt	
+
+	@staticmethod
+	def register_roi(f):
+		def inner(self, frame, *args, **kwargs):
+			ok = f(self, frame, *args, **kwargs)
+			if ok:
+				r = self._region
+				self._roi_history.append(	\
+					frame[r.y:r.y+r.h, r.x:r.x+r.w])
+		return inner
 
 	@classmethod
 	def create(cls):
 		return cls()
-
+	
+	@context_error
 	def copy(self):
 		"""
-		Return a copy of the current object
+		Return a deep copy of the current object
 		"""
 		return deepcopy(self)
 
@@ -75,13 +87,15 @@ class Tracker():
 		self._tracker = tracker
 		return self
 
+	@context_error
 	def set_region(self, region):
 		"""
 		set initialization region
 		"""
 		self._region = region
 		return self
-
+	
+	@context_error
 	def set_frame(self, frame):
 		"""
 		set initialization frame
@@ -98,8 +112,8 @@ class Tracker():
 	def get_region(self) -> Region:
 		return self._region
 
-	def get_history(self) -> List[Tuple[int, int, int, int]]:
-		return self._blob_history
+	def get_history(self) -> List[np.ndarray]:
+		return self._roi_history
 
 	def is_init(self) -> bool:
 		return self._is_init
@@ -110,7 +124,7 @@ class Tracker():
 		Initialization function called before setter methods
 		"""
 		pass
-	
+
 	@context_error
 	def run_config(self):
 		"""
@@ -129,15 +143,17 @@ class Tracker():
 		Initialize your tracker here
 		"""
 		pass
-
+	
 	@abstractmethod
 	def track(self, frame) -> bool:
 		"""
 		Main method to track objects
+		Decorate the implementation with @register_roi
+		to keep track of tracked regions over time
 		:return: if something has been recognized
 		"""
 		pass
-
+	
 class TrackerMultiplexer(Tracker):
 	"""
 	Track multiple regionsfo the same frame
@@ -155,11 +171,18 @@ class TrackerMultiplexer(Tracker):
 		self._regions = list()
 		for tracker in self._trackers:
 			tracker.track(frame)
-			self._regions.append(\
+			self._regions.append( \
 				tracker.get_region())
 
 	def get_regions(self) -> List[Region]:
 		return self._regions
+
+	def get_histories(self) -> List[np.ndarray]:
+		histories = list()
+		for tracker in self._trackers:
+			histories.append( \
+				tracker.get_history())
+		return histories
 	
 	@context_error
 	def add_tracker(self, tracker: Tracker):

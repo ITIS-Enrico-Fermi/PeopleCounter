@@ -8,7 +8,7 @@ __author__ = "Francesco Mecatti & the PeopleCounter Team"
 
 import os
 import cv2 as cv
-from tracker import Tracker, TrackerMultiplexer
+from tracker import Tracker, TrackerMultiplexer 
 from sys import argv
 from cvlib import Shape, Region, Display
 
@@ -19,12 +19,15 @@ class PeopleTracker(Tracker):
 			self._region.to_blob()
 		)
 	
+	@Tracker.register_roi
 	def track(self, frame):
 		success, blob = self._tracker.update(frame)
 		self._region = \
-			Region(*blob,
+			Region(
+				*blob,
 				self._region.color,
-				self._region.shape)
+				self._region.shape
+			)
 		return success
 
 if __name__ == "__main__":
@@ -60,7 +63,8 @@ if __name__ == "__main__":
 						.copy()
 						.set_frame(frame)
 						.set_region(
-							Region(*roi,
+							Region(
+								*roi,
 								(255, 0, 0),
 								Shape.RECTANGLE))
 						.run_config())
@@ -84,4 +88,12 @@ if __name__ == "__main__":
 				tm.get_regions(),
 				"Tracking"
 			)
-				
+		
+		for roi in tm.get_histories()[-1]:
+			d.show(
+				roi,
+				[],
+				"Blob history"
+			)
+			if cv.waitKey(0) & 0xFF == 27:
+				break
