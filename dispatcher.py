@@ -157,14 +157,18 @@ class Dispatcher:
 		time) and save it into self.times, in order to figure
 		out what's the average time needed to classify one frame
 		"""
+		# Elapsed time
+		et = time.time() - self._start_time_int
+		
 		logging.info(
-			f"time for 1 frame classification {time.time() - self.start_time_int}")
+			f"time for 1 frame classification {et}")
 		
 		# If the vieo source is not a cam
-		if not str.isnumeric(self.video_source):
-			self._times[self._times_index] = \
-				time.time() - self._start_time_int
+		if isinstance(self._source, str) \
+			and str.isnumeric(self._source):
+			self._times[self._times_index] = et
 			self._times_index += 1
+		return et
 
 #	def preprocess(self):
 #		"""
@@ -211,11 +215,13 @@ class Dispatcher:
 			if frame is None:
 				break
 			
+			self.__start_time()
 			self._dispatching_algo(
 				frame,
 				self._detector,
 				self._tracker,
 				self._display)
+			self.__end_time()
 			
 			# If key is equal to ESC
 			if cv.waitKey(1) & 0xFF == 27:

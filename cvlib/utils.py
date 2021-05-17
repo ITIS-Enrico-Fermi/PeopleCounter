@@ -176,9 +176,10 @@ def centroid(frame: np.ndarray) -> Point:
 
     # Calculate moments
     m = cv.moments(th)
-
-    # Calculate centroid
-    cx = m["m10"]/m["m00"]
-    cy = m["m01"]/m["m00"]
+		
+    if m["m00"] !=0:
+        # Calculate centroid
+        cx = m["m10"]/m["m00"]
+        cy = m["m01"]/m["m00"]
     
     return Point(cx, cy)

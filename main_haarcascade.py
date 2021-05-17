@@ -121,7 +121,7 @@ if __name__ == "__main__":
 		.bind_tracker(tracker_multiplexer)
 		.bind_detector(detector_multiplexer)
 		.set_buffer_size(FRAME_BUFFER_SIZE)
-		.set_source(0))
+		.set_source('dataset/footage.mp4'))
 
 	if dispatcher.is_error():
 		logging.error(
