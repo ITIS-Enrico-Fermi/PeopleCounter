@@ -14,7 +14,8 @@ from cvlib import *
 from abc import ABC, ABCMeta, abstractmethod
 from common import context_error
 from copy import deepcopy, copy
-
+from collections import defaultdict
+from typing import List, Dict
 
 class Tracker():
 	"""
@@ -39,6 +40,7 @@ class Tracker():
 		self._is_error = False
 		self._error: Exception = None
 		self._roi_history: List[np.ndarray] = list()
+		self._blob_history: List[Tuple[int, int, int, int]] = list()
 		self._is_init: bool = False
 
 		self.init()
@@ -72,6 +74,15 @@ class Tracker():
 			return ok
 		return inner
 
+	@staticmethod
+	def register_blob(f):
+		def inner(self, *args, **kwargs):
+			ok = f(self, *args, **kwargs)
+			if ok:
+				self._blob_history.append( \
+					self._region.to_blob())
+			return ok
+		return inner
 	@classmethod
 	def create(cls):
 		return cls()
@@ -112,9 +123,12 @@ class Tracker():
 	def get_region(self) -> Region:
 		return self._region
 
-	def get_history(self) -> List[np.ndarray]:
+	def get_roi_history(self) -> List[np.ndarray]:
 		return self._roi_history
-
+	
+	def get_blob_history(self) -> List[Tuple[int, int, int, int]]:
+		return self._blob_history
+	
 	def is_init(self) -> bool:
 		return self._is_init
 
@@ -177,12 +191,18 @@ class TrackerMultiplexer(Tracker):
 	def get_regions(self) -> List[Region]:
 		return self._regions
 
-	def get_histories(self) -> List[np.ndarray]:
-		histories = list()
+	def get_roi_histories(self) -> Dict[int, List[np.ndarray]]:
+		histories = defaultdict(list)
 		for tracker in self._trackers:
-			print(tracker)
-			histories.append( \
-				tracker.get_history())
+			histories[id(tracker)] = \
+				tracker.get_roi_history()
+		return histories
+
+	def get_blob_histories(self) -> Dict[int, List[Tuple[int, int, int, int]]]:
+		histories = defaultdict(list)
+		for tracker in self._trackers:
+			histories[id(tracker)] = \
+				tracker.get_blob_history()
 		return histories
 	
 	@context_error

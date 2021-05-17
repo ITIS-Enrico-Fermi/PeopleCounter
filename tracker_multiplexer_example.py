@@ -19,6 +19,7 @@ class PeopleTracker(Tracker):
 			self._region.to_blob()
 		)
 	
+	@Tracker.register_blob
 	@Tracker.register_roi
 	def track(self, frame):
 		success, blob = self._tracker.update(frame)
@@ -89,7 +90,9 @@ if __name__ == "__main__":
 				"Tracking"
 			)
 		
-		for roi in tm.get_histories()[-1]:
+		# print(tm.get_blob_histories())
+		# Show only history of the last tracker
+		for roi in tm.get_roi_histories()[id(t)]:
 			d.show(
 				roi,
 				[],
