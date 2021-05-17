@@ -41,6 +41,7 @@ class Tracker():
 		self._error: Exception = None
 		self._roi_history: List[np.ndarray] = list()
 		self._blob_history: List[Tuple[int, int, int, int]] = list()
+		self._path: List[Tuple[int, int]] = list()
 		self._is_init: bool = False
 
 		self.init()
@@ -69,8 +70,14 @@ class Tracker():
 			ok = f(self, frame, *args, **kwargs)
 			if ok:
 				r = self._region
-				self._roi_history.append(	\
-					frame[r.y:r.y+r.h, r.x:r.x+r.w])
+				cropped = frame[r.y:r.y+r.h, r.x:r.x+r.w]
+				self._roi_history.append(cropped)
+				
+				c = centroid(cropped)
+				self._path.append((
+					int(c.x+r.x), int(c.y+r.y)
+				))
+			
 			return ok
 		return inner
 
@@ -128,6 +135,9 @@ class Tracker():
 	
 	def get_blob_history(self) -> List[Tuple[int, int, int, int]]:
 		return self._blob_history
+
+	def get_path(self) -> List[Tuple[int, int]]:
+		return self._path
 	
 	def is_init(self) -> bool:
 		return self._is_init
@@ -205,6 +215,14 @@ class TrackerMultiplexer(Tracker):
 				tracker.get_blob_history()
 		return histories
 	
+	def get_paths(self) -> Dict[int, List[Tuple[int, int]]]:
+		paths = defaultdict(list)
+		for tracker in self._trackers:
+			paths[id(tracker)] = \
+				tracker.get_path()
+		return paths
+
+
 	@context_error
 	def add_tracker(self, tracker: Tracker):
 		"""

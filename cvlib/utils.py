@@ -164,3 +164,21 @@ def scale(img: np.ndarray, scale_factor: float, min_size: Tuple[int, int] = (0, 
             scaled_h = min_size[1]
             scaled_w = (w/h)*min_size[1]
     return cv.resize(img, (int(scaled_w), int(scaled_h)))
+
+def centroid(frame: np.ndarray) -> Point:
+    # To grayscale
+    gf = cv.cvtColor(
+        frame,
+        cv.COLOR_BGR2GRAY)
+
+    # To binary
+    ret, th = cv.threshold(gf, 127, 255, 0)
+
+    # Calculate moments
+    m = cv.moments(th)
+
+    # Calculate centroid
+    cx = m["m10"]/m["m00"]
+    cy = m["m01"]/m["m00"]
+    
+    return Point(cx, cy)

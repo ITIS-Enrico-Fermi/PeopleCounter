@@ -8,9 +8,10 @@ __author__ = "Francesco Mecatti & the PeopleCounter Team"
 
 import os
 import cv2 as cv
-from tracker import Tracker, TrackerMultiplexer 
 from sys import argv
+import numpy as np
 from cvlib import Shape, Region, Display
+from tracker import Tracker, TrackerMultiplexer 
 
 class PeopleTracker(Tracker):
 	def config(self):
@@ -49,10 +50,12 @@ if __name__ == "__main__":
 		d = Display()
 		
 		cap = cv.VideoCapture(argv[1])
+		last_frame = None
 		while True:
 			ret, frame = cap.read()
 			if frame is None:
 				break
+			last_frame = frame
 			if cv.waitKey(1) & 0xFF == 27:
 				break
 			if not t.is_init():
@@ -90,6 +93,24 @@ if __name__ == "__main__":
 				"Tracking"
 			)
 		
+		# Show paths of the last obj tracked
+		path = tm.get_paths()[id(t)]
+		frame = cv.polylines(
+			last_frame,
+			[np.array(path)],
+			isClosed = False,
+			color = (255, 0, 0),
+			thickness = 3)
+		print(frame)
+		d.show(
+			frame,
+			[],
+			"Path"
+		)
+
+		if cv.waitKey(0) & 0xFF == 27:
+			pass
+
 		# print(tm.get_blob_histories())
 		# Show only history of the last tracker
 		for roi in tm.get_roi_histories()[id(t)]:
