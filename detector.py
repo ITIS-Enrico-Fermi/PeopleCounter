@@ -117,10 +117,11 @@ class DetectorMultiplexer(Detector):
 		"""
 		Detect serveral regions with one method
 		"""
-		self._regions = list()
+		self._regions = dict()
 		for detector in self._detectors:
-			detector.detect(frame)
-			self._regions.append(detector.get_regions())
+			if detector.detect(frame):
+				self._regions[id(detector)] = \
+					detector.get_regions()
 		return bool(self._regions)
 
 	@context_error

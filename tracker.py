@@ -185,7 +185,7 @@ class TrackerMultiplexer(Tracker):
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
 		self._trackers: List[Tracker] = list()
-		self._regions: List[Region] = list()
+		self._regions: Dict[int, Region] = defaultdict(Region)
 	
 	@staticmethod
 	def create():
@@ -194,9 +194,10 @@ class TrackerMultiplexer(Tracker):
 	def multitrack(self, frame) -> bool:
 		self._regions = list()
 		for tracker in self._trackers:
-			tracker.track(frame)
-			self._regions.append( \
-				tracker.get_region())
+			if tracker.track(frame):
+				self._regions[id(tracker)] = \
+					tracker.get_region()
+		return any(self._regions)
 
 	def get_regions(self) -> List[Region]:
 		return self._regions
