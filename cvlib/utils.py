@@ -56,6 +56,10 @@ class Region:
         self.color: Tuple[int, int, int] = color
         self.shape: Shape = shape
 
+    @classmethod
+    def from_blob(cls, y: int = 0, x: int = 0, h: int = 0, w: int = 0, color: Tuple[int, int, int] = (0, 255, 0), shape: Shape = Shape.RECTANGLE):
+        return Region(x, y, w, h, color, shape)
+    
     def get_area(self) -> int:
         """
         Get ROI's area
