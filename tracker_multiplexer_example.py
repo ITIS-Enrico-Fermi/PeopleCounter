@@ -10,7 +10,7 @@ import os
 import cv2 as cv
 from sys import argv
 import numpy as np
-from cvlib import Shape, Region, Display
+from cvlib import Shape, Region, Display, draw_line_from_points
 from tracker import Tracker, TrackerMultiplexer 
 
 class PeopleTracker(Tracker):
@@ -95,12 +95,10 @@ if __name__ == "__main__":
 		
 		# Show paths of the last obj tracked
 		path = tm.get_paths()[id(t)]
-		frame = cv.polylines(
-			last_frame,
-			[np.array(path)],
-			isClosed = False,
-			color = (255, 0, 0),
-			thickness = 3)
+		frame = \
+			draw_line_from_points(
+				last_frame,
+				path)
 		print(frame)
 		d.show(
 			frame,

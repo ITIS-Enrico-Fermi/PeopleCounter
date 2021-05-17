@@ -95,4 +95,10 @@ def draw(frame: np.ndarray, region: Region) -> np.ndarray:
     else:
         return frame
 
-
+def draw_line_from_points(frame: np.ndarray, pts: List[Tuple[int, int]], color: Tuple[int, int, int] = (255, 0, 0), thickness: int = 3):
+		return cv.polylines(
+			frame,
+			[np.array(pts)],
+			isClosed = False,
+			color = color,
+			thickness = thickness)
