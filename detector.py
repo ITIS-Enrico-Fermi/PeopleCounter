@@ -103,10 +103,14 @@ class DetectorMultiplexer(Detector):
 		return DetectorMultiplexer()
 	
 	def multidetect(self, frame) -> bool:
+		"""
+		Detect serveral regions with one method
+		"""
 		self._regions = list()
 		for detector in self._detectors:
 			detector.detect(frame)
 			self._regions.append(detector.get_regions())
+		return bool(self._regions)
 
 	@context_error
 	def add_detector(self, detector: Detector):
