@@ -69,13 +69,13 @@ class Tracker():
 				r = self._region
 				self._roi_history.append(	\
 					frame[r.y:r.y+r.h, r.x:r.x+r.w])
+			return ok
 		return inner
 
 	@classmethod
 	def create(cls):
 		return cls()
 	
-	@context_error
 	def copy(self):
 		"""
 		Return a deep copy of the current object
@@ -180,6 +180,7 @@ class TrackerMultiplexer(Tracker):
 	def get_histories(self) -> List[np.ndarray]:
 		histories = list()
 		for tracker in self._trackers:
+			print(tracker)
 			histories.append( \
 				tracker.get_history())
 		return histories

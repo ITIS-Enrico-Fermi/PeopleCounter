@@ -81,7 +81,7 @@ if __name__ == "__main__":
 					print(f"An error occurred: {t.get_error()}")
 				
 				continue
-
+			
 			tm.multitrack(frame)
 			d.show(
 				frame,
