@@ -216,8 +216,9 @@ class Dispatcher:
 				self._detector,
 				self._tracker,
 				self._display)
-			# self.detect_and_display(frame, processed_frame_preview)
-			if cv.waitKey(1) == 27:  # Key ==> 'ESC'
+			
+			# If key is equal to ESC
+			if cv.waitKey(1) & 0xFF == 27:
 				break
 
 		cap.release()

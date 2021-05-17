@@ -192,7 +192,7 @@ class TrackerMultiplexer(Tracker):
 		return TrackerMultiplexer()
 	
 	def multitrack(self, frame) -> bool:
-		self._regions = list()
+		self._regions = dict()
 		for tracker in self._trackers:
 			if tracker.track(frame):
 				self._regions[id(tracker)] = \
@@ -234,3 +234,18 @@ class TrackerMultiplexer(Tracker):
 		self._trackers.append(tracker)        
 		return self
 
+	@context_error
+	def remove_tracker(self, tracker: Tracker):
+		"""
+		Remove tracker from the context list
+		"""
+		self._trackers.remove(tracker)
+		return self
+
+	@context_error
+	def remove_all(self):
+		"""
+		Deregister all trackers
+		"""
+		self._trackers = list()
+		return self

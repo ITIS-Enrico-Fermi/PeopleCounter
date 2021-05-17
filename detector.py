@@ -44,6 +44,13 @@ class Detector():
 	def create(cls):
 		return cls()
 
+	@staticmethod
+	def reset_regions(f):
+		def inner(self, *args, **kwargs):
+			self._regions = list()
+			f(self, *args, **kwargs)
+		return inner
+	
 	@context_error
 	def set_model(self, model):
 		self._model = model
